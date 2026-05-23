@@ -1,0 +1,81 @@
+using events_admin.Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace events_admin.Services;
+
+public class MetricsService
+{
+    private readonly QuasarDbContext _db;
+
+    public MetricsService(QuasarDbContext db)
+    {
+        _db = db;
+    }
+
+    /// Ingresos totales en un rango (solo ventas aprobadas)
+    public async Task<decimal> GetRevenueTotalAsync(DateTime desde, DateTime hasta)
+    {
+        return await _db.VENTAs
+            .Where(v => v.estado_pago == "APPROVED")
+            .Where(v => v.fecha_venta >= desde && v.fecha_venta <= hasta)
+            .SumAsync(v => v.total);
+    }
+
+    /// Tickets vendidos en un rango (de ventas aprobadas)
+    public async Task<int> GetTicketsSoldAsync(DateTime desde, DateTime hasta)
+    {
+        return await _db.TICKETs
+            .Where(t => t.id_ventaNavigation.estado_pago == "APPROVED")
+            .Where(t => t.fecha_generacion >= desde && t.fecha_generacion <= hasta)
+            .CountAsync();
+    }
+
+    /// Ventas agrupadas por semana ISO
+    public async Task<List<WeeklySalesDto>> GetWeeklySalesAsync(DateTime desde, DateTime hasta)
+    {
+        var ventas = await _db.VENTAs
+            .Where(v => v.estado_pago == "APPROVED")
+            .Where(v => v.fecha_venta >= desde && v.fecha_venta <= hasta)
+            .Select(v => new { v.fecha_venta, v.total })
+            .ToListAsync();
+
+        return ventas
+            .GroupBy(v => System.Globalization.ISOWeek.GetWeekOfYear(v.fecha_venta!.Value))
+            .Select(g => new WeeklySalesDto
+            {
+                Semana = g.Key,
+                Total = g.Sum(x => x.total),
+                Cantidad = g.Count()
+            })
+            .OrderBy(w => w.Semana)
+            .ToList();
+    }
+
+    /// Tasa de asistencia de un evento: scans válidos ÷ tickets emitidos
+    public async Task<double> GetAttendanceRateAsync(int idEvento)
+    {
+        // Tickets del evento (via EVENTO_ASIENTO → EVENTO)
+        var totalTickets = await _db.TICKETs
+            .Where(t => t.id_evento_asientoNavigation.id_evento == idEvento)
+            .CountAsync();
+
+        if (totalTickets == 0) return 0;
+
+        // Scans válidos de esos tickets
+        var asistieron = await _db.SCANs
+            .Where(s => s.resultado == "VALIDO")
+            .Where(s => s.id_ticketNavigation.id_evento_asientoNavigation.id_evento == idEvento)
+            .Select(s => s.id_ticket)
+            .Distinct()
+            .CountAsync();
+
+        return (double)asistieron / totalTickets;
+    }
+}
+
+public class WeeklySalesDto
+{
+    public int Semana { get; set; }
+    public decimal Total { get; set; }
+    public int Cantidad { get; set; }
+}

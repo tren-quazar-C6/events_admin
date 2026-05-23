@@ -54,20 +54,20 @@ public partial class QuasarDbContext : DbContext
 
         modelBuilder.Entity<ASIENTO>(entity =>
         {
-            entity.HasKey(e => e.id_asiento).HasName("PRIMARY");
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
 
             entity.ToTable("ASIENTOS");
 
-            entity.HasIndex(e => e.codigo_asiento, "codigo_asiento").IsUnique();
+            entity.HasIndex(e => e.SeatCode, "codigo_asiento").IsUnique();
 
-            entity.HasIndex(e => e.id_zona, "id_zona");
+            entity.HasIndex(e => e.ZoneId, "id_zona");
 
-            entity.Property(e => e.activo).HasDefaultValueSql("'1'");
-            entity.Property(e => e.codigo_asiento).HasMaxLength(20);
-            entity.Property(e => e.fila).HasMaxLength(10);
+            entity.Property(e => e.IsActive).HasDefaultValueSql("'1'");
+            entity.Property(e => e.SeatCode).HasMaxLength(20);
+            entity.Property(e => e.Row).HasMaxLength(10);
 
             entity.HasOne(d => d.id_zonaNavigation).WithMany(p => p.ASIENTOs)
-                .HasForeignKey(d => d.id_zona)
+                .HasForeignKey(d => d.ZoneId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("ASIENTOS_ibfk_1");
         });

@@ -1,29 +1,74 @@
-var builder = WebApplication.CreateBuilder(args);
+using events_admin.Data;
+using events_admin.Services;
+using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: false)
+    .AddEnvironmentVariables()
+    .Build();
 
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+var connectionString = configuration.GetConnectionString("Quasar");
+if (string.IsNullOrWhiteSpace(connectionString))
 {
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    throw new InvalidOperationException("Connection string 'Quasar' is not configured.");
 }
 
-app.UseHttpsRedirection();
-app.UseRouting();
+var urls = configuration["ASPNETCORE_URLS"] ?? "http://localhost:5039";
 
-app.UseAuthorization();
+var host = new WebHostBuilder()
+    .UseKestrel()
+    .UseContentRoot(Directory.GetCurrentDirectory())
+    .UseConfiguration(configuration)
+    .UseUrls(urls)
+    .ConfigureServices(services =>
+    {
+        services.AddDbContext<QuasarDbContext>(options =>
+            options.UseMySql(
+                connectionString,
+                new MySqlServerVersion(new Version(8, 0, 36))
+            )
+        );
 
-app.MapStaticAssets();
+        services.AddScoped<MetricsService>();
+        services.AddControllersWithViews();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowFrontend",
+                policy =>
+                {
+                    policy.AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+        });
+    })
+    .Configure(app =>
+    {
+        if (!string.Equals(environment, "Development", StringComparison.OrdinalIgnoreCase))
+        {
+            app.UseExceptionHandler("/Home/Error");
+            app.UseHsts();
+        }
 
+        app.UseHttpsRedirection();
+        app.UseStaticFiles();
+        app.UseRouting();
+        app.UseCors("AllowFrontend");
+        app.UseAuthorization();
 
-app.Run();
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+            endpoints.MapControllerRoute(
+                name: "default",
+                pattern: "{controller=Home}/{action=Index}/{id?}");
+        });
+    })
+    .Build();
+
+await host.RunAsync();
