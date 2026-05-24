@@ -71,11 +71,33 @@ public class MetricsService
 
         return (double)asistieron / totalTickets;
     }
-}
 
-public class WeeklySalesDto
-{
-    public int Semana { get; set; }
-    public decimal Total { get; set; }
-    public int Cantidad { get; set; }
+    /// Ocupacion de un evento: asientos vendidos sobre capacidad del evento.
+    public async Task<OccupancyDto> GetOccupancyAsync(int idEvento)
+    {
+        var evento = await _db.EVENTOs
+            .Where(e => e.id_evento == idEvento)
+            .Select(e => new { e.id_evento, e.capacidad_total })
+            .FirstOrDefaultAsync();
+
+        if (evento is null)
+        {
+            return new OccupancyDto { IdEvento = idEvento };
+        }
+
+        var vendidos = await _db.EVENTO_ASIENTOs
+            .Where(ea => ea.id_evento == idEvento)
+            .CountAsync(ea => ea.estado == "VENDIDO");
+
+        var capacidad = evento.capacidad_total;
+
+        return new OccupancyDto
+        {
+            IdEvento = idEvento,
+            CapacidadTotal = capacidad,
+            AsientosVendidos = vendidos,
+            AsientosDisponibles = Math.Max(capacidad - vendidos, 0),
+            Ocupacion = capacidad == 0 ? 0 : (double)vendidos / capacidad
+        };
+    }
 }
