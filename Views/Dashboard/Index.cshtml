@@ -1,0 +1,125 @@
+@model events_admin.Services.DashboardMetricsDto
+
+@{
+    ViewData["Title"] = "Dashboard - Métricas";
+}
+
+<div class="container mt-5">
+    <h1> Dashboard de Métricas</h1>
+
+    @if (!Model.Success)
+    {
+        <div class="alert alert-danger" role="alert">
+            <strong>Error al cargar métricas:</strong> @Model.Error
+        </div>
+    }
+
+    <!-- Date Range Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" action="/dashboard/custom" class="row g-3">
+                <div class="col-md-4">
+                    <label for="desde" class="form-label">Desde</label>
+                    <input type="date" class="form-control" id="desde" name="desde" value="@Model.Desde.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-md-4">
+                    <label for="hasta" class="form-label">Hasta</label>
+                    <input type="date" class="form-control" id="hasta" name="hasta" value="@Model.Hasta.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Ingresos Totales</h5>
+                    <h2>@Model.TotalRevenue.ToString("C0")</h2>
+                    <small>COP</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Boletas Vendidas</h5>
+                    <h2>@Model.TotalTickets</h2>
+                    <small>unidades</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Promedio por Boleta</h5>
+                    <h2>@Model.AveragePerTicket</h2>
+                    <small>precio</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weekly Sales Table -->
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <h5>Ventas por Semana</h5>
+        </div>
+        <div class="card-body">
+            @if (Model.WeeklySales != null && Model.WeeklySales.Count > 0)
+            {
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Semana</th>
+                            <th>Ingresos</th>
+                            <th>Boletas</th>
+                            <th>Promedio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var week in Model.WeeklySales)
+                        {
+                            var average = week.Cantidad > 0 ? (week.Total / week.Cantidad).ToString("C0") : "N/A";
+                            <tr>
+                                <td>Semana @week.Semana</td>
+                                <td>@week.Total.ToString("C0")</td>
+                                <td>@week.Cantidad</td>
+                                <td>@average</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-muted">No hay datos para el rango de fechas seleccionado.</p>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .card h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+    }
+</style>

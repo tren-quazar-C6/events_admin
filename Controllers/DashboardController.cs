@@ -5,12 +5,12 @@ namespace events_admin.Controllers;
 
 public class DashboardController : Controller
 {
-    private readonly MetricsApiClient _metricsClient;
+    private readonly MetricsService _metricsService;
     private readonly ILogger<DashboardController> _logger;
 
-    public DashboardController(MetricsApiClient metricsClient, ILogger<DashboardController> logger)
+    public DashboardController(MetricsService metricsService, ILogger<DashboardController> logger)
     {
-        _metricsClient = metricsClient;
+        _metricsService = metricsService;
         _logger = logger;
     }
 
@@ -24,7 +24,7 @@ public class DashboardController : Controller
         var hasta = DateTime.Now;
         var desde = hasta.AddDays(-30);
 
-        var dashboard = await _metricsClient.GetDashboardAsync(desde, hasta);
+        var dashboard = await BuildDashboardAsync(desde, hasta);
 
         return View(dashboard);
     }
@@ -40,7 +40,7 @@ public class DashboardController : Controller
         var desdeDate = desde ?? DateTime.Now.AddDays(-30);
         var hastaDate = hasta ?? DateTime.Now;
 
-        var dashboard = await _metricsClient.GetDashboardAsync(desdeDate, hastaDate);
+        var dashboard = await BuildDashboardAsync(desdeDate, hastaDate);
 
         return View("Index", dashboard);
     }
@@ -52,7 +52,8 @@ public class DashboardController : Controller
     [HttpGet("api/dashboard/revenue")]
     public async Task<IActionResult> ApiRevenue([FromQuery] DateTime desde, [FromQuery] DateTime hasta)
     {
-        var revenue = await _metricsClient.GetRevenueAsync(desde, hasta);
+        var range = ResolveDateRange(desde, hasta);
+        var revenue = await _metricsService.GetRevenueTotalAsync(range.Start, range.End);
         return Json(new { success = true, revenue });
     }
 
@@ -63,7 +64,8 @@ public class DashboardController : Controller
     [HttpGet("api/dashboard/weekly")]
     public async Task<IActionResult> ApiWeeklySales([FromQuery] DateTime desde, [FromQuery] DateTime hasta)
     {
-        var weeklySales = await _metricsClient.GetWeeklySalesAsync(desde, hasta);
+        var range = ResolveDateRange(desde, hasta);
+        var weeklySales = await _metricsService.GetWeeklySalesAsync(range.Start, range.End);
         return Json(new { success = true, data = weeklySales });
     }
 
@@ -74,7 +76,54 @@ public class DashboardController : Controller
     [HttpGet("api/dashboard/attendance/{idEvento}")]
     public async Task<IActionResult> ApiAttendance(int idEvento)
     {
-        var rate = await _metricsClient.GetAttendanceRateAsync(idEvento);
+        var rate = await _metricsService.GetAttendanceRateAsync(idEvento);
         return Json(new { success = true, idEvento, attendanceRate = rate });
+    }
+
+    private async Task<DashboardMetricsDto> BuildDashboardAsync(DateTime desde, DateTime hasta)
+    {
+        try
+        {
+            var range = ResolveDateRange(desde, hasta);
+            var totalRevenue = await _metricsService.GetRevenueTotalAsync(range.Start, range.End);
+            var totalTickets = await _metricsService.GetTicketsSoldAsync(range.Start, range.End);
+            var weeklySales = await _metricsService.GetWeeklySalesAsync(range.Start, range.End);
+
+            return new DashboardMetricsDto
+            {
+                Success = true,
+                Desde = range.Start.Date,
+                Hasta = range.End.Date,
+                TotalRevenue = totalRevenue,
+                TotalTickets = totalTickets,
+                AveragePerTicket = totalTickets == 0 ? "N/A" : (totalRevenue / totalTickets).ToString("C0"),
+                WeeklySales = weeklySales
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading dashboard metrics.");
+
+            return new DashboardMetricsDto
+            {
+                Success = false,
+                Error = ex.Message,
+                Desde = desde.Date,
+                Hasta = hasta.Date
+            };
+        }
+    }
+
+    private static (DateTime Start, DateTime End) ResolveDateRange(DateTime desde, DateTime hasta)
+    {
+        var start = desde.Date;
+        var endDate = hasta.Date;
+
+        if (endDate < start)
+        {
+            (start, endDate) = (endDate, start);
+        }
+
+        return (start, endDate.AddDays(1).AddTicks(-1));
     }
 }
