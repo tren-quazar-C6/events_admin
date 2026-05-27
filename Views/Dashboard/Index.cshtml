@@ -88,7 +88,7 @@
                         {
                             var average = week.Cantidad > 0 ? (week.Total / week.Cantidad).ToString("C0") : "N/A";
                             <tr>
-                                <td>Semana @week.Semana</td>
+                                <td>@(week.Anio > 0 ? $"{week.Anio} - Semana {week.Semana}" : $"Semana {week.Semana}")</td>
                                 <td>@week.Total.ToString("C0")</td>
                                 <td>@week.Cantidad</td>
                                 <td>@average</td>

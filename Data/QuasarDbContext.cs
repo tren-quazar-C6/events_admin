@@ -20,6 +20,8 @@ public partial class QuasarDbContext : DbContext
 
     public virtual DbSet<EVENTO_ASIENTO> EVENTO_ASIENTOs { get; set; }
 
+    public virtual DbSet<EVENTO_ZONA> EVENTO_ZONAs { get; set; }
+
     public virtual DbSet<FAVORITO> FAVORITOs { get; set; }
 
     public virtual DbSet<NOTIFICACIONE> NOTIFICACIONEs { get; set; }
@@ -133,7 +135,6 @@ public partial class QuasarDbContext : DbContext
                 .HasDefaultValueSql("'DISPONIBLE'")
                 .HasColumnType("enum('DISPONIBLE','RESERVADO','VENDIDO','BLOQUEADO')");
             entity.Property(e => e.fecha_reserva).HasColumnType("datetime");
-            entity.Property(e => e.precio).HasPrecision(10, 2);
             entity.Property(e => e.reserva_expira).HasColumnType("datetime");
 
             entity.HasOne(d => d.id_asientoNavigation).WithMany(p => p.EVENTO_ASIENTOs)
@@ -144,6 +145,32 @@ public partial class QuasarDbContext : DbContext
             entity.HasOne(d => d.id_eventoNavigation).WithMany(p => p.EVENTO_ASIENTOs)
                 .HasForeignKey(d => d.id_evento)
                 .HasConstraintName("EVENTO_ASIENTO_ibfk_1");
+        });
+
+        modelBuilder.Entity<EVENTO_ZONA>(entity =>
+        {
+            entity.HasKey(e => e.id_evento_zona).HasName("PRIMARY");
+
+            entity.ToTable("EVENTO_ZONA");
+
+            entity.HasIndex(e => new { e.id_evento, e.id_zona }, "id_evento").IsUnique();
+
+            entity.HasIndex(e => e.id_zona, "id_zona");
+
+            entity.Property(e => e.activo).HasDefaultValueSql("'1'");
+            entity.Property(e => e.cargo_servicio)
+                .HasPrecision(10, 2)
+                .HasDefaultValueSql("'0.00'");
+            entity.Property(e => e.precio).HasPrecision(10, 2);
+
+            entity.HasOne(d => d.id_eventoNavigation).WithMany(p => p.EVENTO_ZONAs)
+                .HasForeignKey(d => d.id_evento)
+                .HasConstraintName("EVENTO_ZONA_ibfk_1");
+
+            entity.HasOne(d => d.id_zonaNavigation).WithMany(p => p.EVENTO_ZONAs)
+                .HasForeignKey(d => d.id_zona)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("EVENTO_ZONA_ibfk_2");
         });
 
         modelBuilder.Entity<FAVORITO>(entity =>
@@ -305,6 +332,8 @@ public partial class QuasarDbContext : DbContext
             entity.Property(e => e.fecha_generacion)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("datetime");
+            entity.Property(e => e.fecha_impresion).HasColumnType("datetime");
+            entity.Property(e => e.precio_pagado).HasPrecision(10, 2);
             entity.Property(e => e.qr_token).HasMaxLength(500);
 
             entity.HasOne(d => d.id_estado_ticketNavigation).WithMany(p => p.TICKETs)

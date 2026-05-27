@@ -36,18 +36,24 @@ public class MetricsService
         var ventas = await _db.VENTAs
             .Where(v => v.estado_pago == "APPROVED")
             .Where(v => v.fecha_venta >= desde && v.fecha_venta <= hasta)
-            .Select(v => new { v.fecha_venta, v.total })
+            .Select(v => new { v.fecha_venta, v.total, Tickets = v.TICKETs.Count })
             .ToListAsync();
 
         return ventas
-            .GroupBy(v => System.Globalization.ISOWeek.GetWeekOfYear(v.fecha_venta!.Value))
+            .GroupBy(v => new
+            {
+                Anio = System.Globalization.ISOWeek.GetYear(v.fecha_venta!.Value),
+                Semana = System.Globalization.ISOWeek.GetWeekOfYear(v.fecha_venta!.Value)
+            })
             .Select(g => new WeeklySalesDto
             {
-                Semana = g.Key,
+                Anio = g.Key.Anio,
+                Semana = g.Key.Semana,
                 Total = g.Sum(x => x.total),
-                Cantidad = g.Count()
+                Cantidad = g.Sum(x => x.Tickets)
             })
-            .OrderBy(w => w.Semana)
+            .OrderBy(w => w.Anio)
+            .ThenBy(w => w.Semana)
             .ToList();
     }
 

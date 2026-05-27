@@ -22,8 +22,7 @@ public class MetricsApiClient
     private string GetApiBaseUrl()
     {
         return _config["ApiSettings:BaseUrl"]
-            ?? _config["ASPNETCORE_URLS"]
-            ?? "http://localhost:5039";
+            ?? "http://localhost:5114";
     }
 
     /// <summary>
@@ -33,7 +32,7 @@ public class MetricsApiClient
     {
         try
         {
-            string url = $"{GetApiBaseUrl()}/api/metrics/revenue?desde={desde:yyyy-MM-dd}&hasta={hasta:yyyy-MM-dd}";
+            string url = $"{GetApiBaseUrl()}/api/metrics/revenue-total?desde={desde:yyyy-MM-dd}&hasta={hasta:yyyy-MM-dd}";
             var response = await _httpClient.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
@@ -45,6 +44,11 @@ public class MetricsApiClient
             var json = await response.Content.ReadAsStringAsync();
             var doc = JsonDocument.Parse(json);
             
+            if (doc.RootElement.TryGetProperty("valor", out var valorElement))
+            {
+                return valorElement.GetDecimal();
+            }
+
             if (doc.RootElement.TryGetProperty("total", out var totalElement))
             {
                 return totalElement.GetDecimal();
@@ -77,7 +81,12 @@ public class MetricsApiClient
 
             var json = await response.Content.ReadAsStringAsync();
             var doc = JsonDocument.Parse(json);
-            
+
+            if (doc.RootElement.TryGetProperty("valor", out var valorElement))
+            {
+                return valorElement.GetInt32();
+            }
+
             if (doc.RootElement.TryGetProperty("ticketsSold", out var ticketsElement))
             {
                 return ticketsElement.GetInt32();
@@ -111,16 +120,24 @@ public class MetricsApiClient
             var json = await response.Content.ReadAsStringAsync();
             var doc = JsonDocument.Parse(json);
             
-            if (doc.RootElement.TryGetProperty("weeks", out var weeksElement))
+            var weeksElement = doc.RootElement;
+            if (doc.RootElement.ValueKind == JsonValueKind.Object
+                && doc.RootElement.TryGetProperty("weeks", out var wrappedWeeksElement))
+            {
+                weeksElement = wrappedWeeksElement;
+            }
+
+            if (weeksElement.ValueKind == JsonValueKind.Array)
             {
                 var weeks = new List<WeeklySalesDto>();
                 foreach (var week in weeksElement.EnumerateArray())
                 {
                     weeks.Add(new WeeklySalesDto
                     {
-                        Semana = week.GetProperty("semana").GetInt32(),
-                        Total = week.GetProperty("total").GetDecimal(),
-                        Cantidad = week.GetProperty("cantidad").GetInt32()
+                        Anio = GetOptionalInt32(week, "anio"),
+                        Semana = GetOptionalInt32(week, "semana", "week"),
+                        Total = GetOptionalDecimal(week, "total", "revenue"),
+                        Cantidad = GetOptionalInt32(week, "cantidad")
                     });
                 }
                 return weeks;
@@ -142,7 +159,7 @@ public class MetricsApiClient
     {
         try
         {
-            string url = $"{GetApiBaseUrl()}/api/metrics/attendance/{idEvento}";
+            string url = $"{GetApiBaseUrl()}/api/metrics/eventos/{idEvento}/attendance-rate";
             var response = await _httpClient.GetAsync(url);
 
             if (!response.IsSuccessStatusCode)
@@ -156,19 +173,12 @@ public class MetricsApiClient
             
             if (doc.RootElement.TryGetProperty("attendanceRate", out var rateElement))
             {
-                if (rateElement.ValueKind == JsonValueKind.Number)
-                {
-                    return rateElement.GetDouble();
-                }
+                return ParseRate(rateElement);
+            }
 
-                if (rateElement.ValueKind == JsonValueKind.String)
-                {
-                    string rateStr = rateElement.GetString()?.Replace("%", "") ?? "0";
-                    if (double.TryParse(rateStr, out double rate))
-                    {
-                        return rate > 1 ? rate / 100 : rate;
-                    }
-                }
+            if (doc.RootElement.TryGetProperty("tasaAsistencia", out var tasaElement))
+            {
+                return ParseRate(tasaElement);
             }
 
             return 0;
@@ -187,52 +197,120 @@ public class MetricsApiClient
     {
         try
         {
-            string url = $"{GetApiBaseUrl()}/api/metrics/dashboard?desde={desde:yyyy-MM-dd}&hasta={hasta:yyyy-MM-dd}";
-            var response = await _httpClient.GetAsync(url);
+            var totalRevenue = await GetMetricValueAsync<decimal>(
+                $"/api/metrics/revenue-total?desde={desde:yyyy-MM-dd}&hasta={hasta:yyyy-MM-dd}",
+                value => value.GetDecimal());
+            var totalTickets = await GetMetricValueAsync<int>(
+                $"/api/metrics/tickets-sold?desde={desde:yyyy-MM-dd}&hasta={hasta:yyyy-MM-dd}",
+                value => value.GetInt32());
+            var weeklySales = await GetWeeklySalesFromApiAsync(desde, hasta);
 
-            if (!response.IsSuccessStatusCode)
+            return new DashboardMetricsDto
             {
-                _logger.LogError($"API error: {response.StatusCode}");
-                return new DashboardMetricsDto { Success = false };
-            }
-
-            var json = await response.Content.ReadAsStringAsync();
-            var doc = JsonDocument.Parse(json);
-
-            var dashboard = new DashboardMetricsDto
-            {
-                Success = doc.RootElement.GetProperty("success").GetBoolean(),
-                Desde = doc.RootElement.GetProperty("desde").GetDateTime(),
-                Hasta = doc.RootElement.GetProperty("hasta").GetDateTime()
+                Success = true,
+                Desde = desde.Date,
+                Hasta = hasta.Date,
+                TotalRevenue = totalRevenue,
+                TotalTickets = totalTickets,
+                AveragePerTicket = totalTickets == 0 ? "N/A" : (totalRevenue / totalTickets).ToString("C0"),
+                WeeklySales = weeklySales
             };
-
-            if (doc.RootElement.TryGetProperty("summary", out var summaryElement))
-            {
-                dashboard.TotalRevenue = summaryElement.GetProperty("totalRevenue").GetDecimal();
-                dashboard.TotalTickets = summaryElement.GetProperty("totalTickets").GetInt32();
-                dashboard.AveragePerTicket = summaryElement.GetProperty("averagePerTicket").GetString() ?? "N/A";
-            }
-
-            if (doc.RootElement.TryGetProperty("weeklySales", out var weeksElement))
-            {
-                dashboard.WeeklySales = new List<WeeklySalesDto>();
-                foreach (var week in weeksElement.EnumerateArray())
-                {
-                    dashboard.WeeklySales.Add(new WeeklySalesDto
-                    {
-                        Semana = week.GetProperty("semana").GetInt32(),
-                        Total = week.GetProperty("total").GetDecimal(),
-                        Cantidad = week.GetProperty("cantidad").GetInt32()
-                    });
-                }
-            }
-
-            return dashboard;
         }
         catch (Exception ex)
         {
             _logger.LogError($"Error calling metrics API: {ex.Message}");
             return new DashboardMetricsDto { Success = false, Error = ex.Message };
         }
+    }
+
+    private async Task<T> GetMetricValueAsync<T>(string pathAndQuery, Func<JsonElement, T> parse)
+    {
+        var response = await _httpClient.GetAsync($"{GetApiBaseUrl()}{pathAndQuery}");
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync();
+        var doc = JsonDocument.Parse(json);
+
+        if (!doc.RootElement.TryGetProperty("valor", out var valorElement))
+        {
+            throw new InvalidOperationException("Metrics API response does not include 'valor'.");
+        }
+
+        return parse(valorElement);
+    }
+
+    private async Task<List<WeeklySalesDto>> GetWeeklySalesFromApiAsync(DateTime desde, DateTime hasta)
+    {
+        var response = await _httpClient.GetAsync(
+            $"{GetApiBaseUrl()}/api/metrics/weekly-sales?desde={desde:yyyy-MM-dd}&hasta={hasta:yyyy-MM-dd}");
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync();
+        var doc = JsonDocument.Parse(json);
+        var weeks = new List<WeeklySalesDto>();
+
+        if (doc.RootElement.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidOperationException("Metrics API weekly sales response is not an array.");
+        }
+
+        foreach (var week in doc.RootElement.EnumerateArray())
+        {
+            weeks.Add(new WeeklySalesDto
+            {
+                Anio = GetOptionalInt32(week, "anio"),
+                Semana = GetOptionalInt32(week, "semana", "week"),
+                Total = GetOptionalDecimal(week, "total", "revenue"),
+                Cantidad = GetOptionalInt32(week, "cantidad")
+            });
+        }
+
+        return weeks;
+    }
+
+    private static int GetOptionalInt32(JsonElement element, params string[] propertyNames)
+    {
+        foreach (var propertyName in propertyNames)
+        {
+            if (element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.Number)
+            {
+                return property.GetInt32();
+            }
+        }
+
+        return 0;
+    }
+
+    private static decimal GetOptionalDecimal(JsonElement element, params string[] propertyNames)
+    {
+        foreach (var propertyName in propertyNames)
+        {
+            if (element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.Number)
+            {
+                return property.GetDecimal();
+            }
+        }
+
+        return 0;
+    }
+
+    private static double ParseRate(JsonElement rateElement)
+    {
+        if (rateElement.ValueKind == JsonValueKind.Number)
+        {
+            var rate = rateElement.GetDouble();
+            return rate > 1 ? rate / 100 : rate;
+        }
+
+        if (rateElement.ValueKind == JsonValueKind.String)
+        {
+            string rateStr = rateElement.GetString()?.Replace("%", "") ?? "0";
+            if (double.TryParse(rateStr, out double rate))
+            {
+                return rate > 1 ? rate / 100 : rate;
+            }
+        }
+
+        return 0;
     }
 }

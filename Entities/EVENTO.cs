@@ -35,6 +35,8 @@ public partial class EVENTO
 
     public virtual ICollection<EVENTO_ASIENTO> EVENTO_ASIENTOs { get; set; } = new List<EVENTO_ASIENTO>();
 
+    public virtual ICollection<EVENTO_ZONA> EVENTO_ZONAs { get; set; } = new List<EVENTO_ZONA>();
+
     public virtual ICollection<FAVORITO> FAVORITOs { get; set; } = new List<FAVORITO>();
 
     public virtual STAFF creado_por_staffNavigation { get; set; } = null!;

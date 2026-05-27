@@ -5,11 +5,16 @@ namespace events_admin.Controllers;
 
 public class DashboardController : Controller
 {
+    private readonly MetricsApiClient _metricsClient;
     private readonly MetricsService _metricsService;
     private readonly ILogger<DashboardController> _logger;
 
-    public DashboardController(MetricsService metricsService, ILogger<DashboardController> logger)
+    public DashboardController(
+        MetricsApiClient metricsClient,
+        MetricsService metricsService,
+        ILogger<DashboardController> logger)
     {
+        _metricsClient = metricsClient;
         _metricsService = metricsService;
         _logger = logger;
     }
@@ -85,6 +90,15 @@ public class DashboardController : Controller
         try
         {
             var range = ResolveDateRange(desde, hasta);
+            var apiDashboard = await _metricsClient.GetDashboardAsync(range.Start, range.End);
+
+            if (apiDashboard.Success)
+            {
+                return apiDashboard;
+            }
+
+            _logger.LogWarning("Metrics API did not return dashboard data. Falling back to local database metrics. Error: {Error}", apiDashboard.Error);
+
             var totalRevenue = await _metricsService.GetRevenueTotalAsync(range.Start, range.End);
             var totalTickets = await _metricsService.GetTicketsSoldAsync(range.Start, range.End);
             var weeklySales = await _metricsService.GetWeeklySalesAsync(range.Start, range.End);

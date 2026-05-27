@@ -11,8 +11,6 @@ public partial class EVENTO_ASIENTO
 
     public int id_asiento { get; set; }
 
-    public decimal precio { get; set; }
-
     public string? estado { get; set; }
 
     public DateTime? fecha_reserva { get; set; }

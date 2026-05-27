@@ -2,6 +2,7 @@ namespace events_admin.Services;
 
 public class WeeklySalesDto
 {
+    public int Anio { get; set; }
     public int Semana { get; set; }
     public decimal Total { get; set; }
     public int Cantidad { get; set; }

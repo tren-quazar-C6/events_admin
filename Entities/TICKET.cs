@@ -17,7 +17,11 @@ public partial class TICKET
 
     public string qr_token { get; set; } = null!;
 
+    public decimal precio_pagado { get; set; }
+
     public DateTime? fecha_generacion { get; set; }
+
+    public DateTime? fecha_impresion { get; set; }
 
     public virtual ICollection<SCAN> SCANs { get; set; } = new List<SCAN>();
 
