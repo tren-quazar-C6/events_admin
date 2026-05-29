@@ -1,0 +1,370 @@
+@{
+    ViewData["Title"] = "Añadir Empleado";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Back -->
+<div class="mb-6 animate-fade-in">
+    <a href="@Url.Action("Index","Staff")"
+       class="inline-flex items-center gap-2 text-sm text-on-surface-variant hover:text-primary transition-colors font-medium">
+        <i class="fa-solid fa-arrow-left text-xs"></i> Volver a Empleados
+    </a>
+</div>
+
+<form id="form-staff" method="post" action="@Url.Action("Create","Staff")">
+@Html.AntiForgeryToken()
+
+<!-- ===== ENCABEZADO ===== -->
+<div class="mb-8 animate-fade-in">
+    <h3 class="text-4xl font-extrabold text-primary tracking-tight mb-2">Nuevo Empleado</h3>
+    <p class="text-sm text-on-surface-variant max-w-lg">
+        Registra un nuevo miembro del equipo y define los portales a los que tendrá acceso dentro del sistema.
+    </p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- ===================================================
+         COLUMNA IZQUIERDA — Avatar preview + rol
+         =================================================== -->
+    <div class="space-y-5">
+
+        <!-- Tarjeta avatar -->
+        <div class="bg-white rounded-3xl border border-black/5 shadow-sm p-6 flex flex-col items-center text-center animate-slide-up" style="animation-delay:.05s">
+
+            <!-- Avatar generado por iniciales -->
+            <div id="avatar-circle"
+                 class="w-24 h-24 rounded-3xl bg-emerald-100 text-emerald-700 flex items-center justify-center
+                        text-3xl font-black mb-4 shadow-sm select-none transition-all duration-300">
+                <span id="avatar-iniciales">??</span>
+            </div>
+
+            <p id="avatar-nombre" class="font-bold text-on-surface text-base mb-0.5">Nombre Completo</p>
+            <p id="avatar-cargo"  class="text-xs text-on-surface-variant">Cargo / Rol</p>
+
+            <!-- Badge estado -->
+            <div class="mt-3 flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> ACTIVO
+            </div>
+
+            <!-- Paleta de colores del avatar -->
+            <div class="mt-5 w-full">
+                <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Color del Avatar</p>
+                <div class="flex justify-center gap-2 flex-wrap">
+                    @{
+                        var paleta = new[] {
+                            ("bg-emerald-100 text-emerald-700", "#d1fae5"),
+                            ("bg-blue-100 text-blue-700",       "#dbeafe"),
+                            ("bg-violet-100 text-violet-700",   "#ede9fe"),
+                            ("bg-amber-100 text-amber-700",     "#fef3c7"),
+                            ("bg-rose-100 text-rose-700",       "#ffe4e6"),
+                            ("bg-cyan-100 text-cyan-700",       "#cffafe"),
+                        };
+                        int pi = 0;
+                    }
+                    @foreach (var (cls, hex) in paleta)
+                    {
+                        <button type="button"
+                                onclick="setAvatarColor('@cls')"
+                                class="w-6 h-6 rounded-full border-2 border-white shadow-sm hover:scale-110 transition-all @(pi==0?"ring-2 ring-primary ring-offset-1":"")"
+                                style="background:@hex"
+                                data-classes="@cls"></button>
+                        pi++;
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Accesos rápidos -->
+        <div class="bg-white rounded-3xl border border-black/5 shadow-sm p-5 animate-slide-up" style="animation-delay:.08s">
+            <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-4">Estado de la cuenta</p>
+            <label class="flex items-center gap-3 cursor-pointer p-2 rounded-2xl hover:bg-surface transition-all">
+                <div class="relative shrink-0">
+                    <input type="checkbox" name="activo" id="chk-activo" class="sr-only peer" checked />
+                    <div class="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-primary transition-colors duration-300"></div>
+                    <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-300 peer-checked:translate-x-5"></div>
+                </div>
+                <div>
+                    <p class="text-sm font-semibold text-on-surface leading-none">Cuenta activa</p>
+                    <p class="text-[11px] text-on-surface-variant mt-0.5">El empleado puede iniciar sesión</p>
+                </div>
+            </label>
+        </div>
+
+    </div>
+
+    <!-- ===================================================
+         COLUMNA DERECHA — Datos + permisos
+         =================================================== -->
+    <div class="lg:col-span-2 space-y-5">
+
+        <!-- Datos personales -->
+        <div class="bg-white rounded-3xl border border-black/5 shadow-sm p-6 md:p-8 animate-slide-up" style="animation-delay:.06s">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-9 h-9 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-user text-sm"></i>
+                </div>
+                <h4 class="font-bold text-on-surface">Datos Personales</h4>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
+                <!-- Nombre -->
+                <div class="sm:col-span-2">
+                    <label class="form-label">Nombre Completo <span class="text-red-400">*</span></label>
+                    <input type="text" name="nombre" id="inp-nombre"
+                           placeholder="Ej. Lucía Sanz Pérez"
+                           class="form-input" required
+                           oninput="actualizarAvatar()" />
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="form-label">Correo Electrónico <span class="text-red-400">*</span></label>
+                    <div class="relative">
+                        <i class="fa-regular fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-xs"></i>
+                        <input type="email" name="email"
+                               placeholder="correo@teatro.com"
+                               class="form-input pl-9" required />
+                    </div>
+                </div>
+
+                <!-- Contraseña -->
+                <div>
+                    <label class="form-label">Contraseña temporal <span class="text-red-400">*</span></label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-xs"></i>
+                        <input type="password" name="password_hash" id="inp-pass"
+                               placeholder="Mínimo 8 caracteres"
+                               class="form-input pl-9 pr-10" required minlength="8" />
+                        <button type="button" onclick="togglePass()"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors">
+                            <i class="fa-regular fa-eye text-sm" id="icon-pass"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Rol general -->
+                <div>
+                    <label class="form-label">Rol Principal <span class="text-red-400">*</span></label>
+                    <div class="relative">
+                        <select name="id_rol_staff" id="sel-rol"
+                                class="form-input appearance-none pr-9"
+                                onchange="actualizarAvatar()" required>
+                            <option value="" disabled selected>Seleccione un rol</option>
+                            <option value="1">Administración</option>
+                            <option value="2">Taquillero</option>
+                            <option value="3">Acomodador / Control de Acceso</option>
+                            <option value="4">Técnico de Sonido</option>
+                            <option value="5">Técnico de Luces</option>
+                            <option value="6">Personal de Sala</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xs pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <!-- Cargo descriptivo -->
+                <div>
+                    <label class="form-label">Cargo Descriptivo</label>
+                    <input type="text" name="cargo_descripcion" id="inp-cargo"
+                           placeholder="Ej. Jefa de Acomodadores"
+                           class="form-input"
+                           oninput="actualizarAvatar()" />
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ===== PERMISOS DE PORTALES ===== -->
+        <div class="bg-white rounded-3xl border border-black/5 shadow-sm p-6 md:p-8 animate-slide-up" style="animation-delay:.1s">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-9 h-9 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-shield-halved text-sm"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-on-surface">Acceso a Portales</h4>
+                </div>
+            </div>
+            <p class="text-xs text-on-surface-variant mb-6 ml-12">
+                Define a qué portales puede acceder este empleado. Cada permiso es independiente.
+            </p>
+
+            <div class="space-y-3">
+
+                <!-- Portal: Admin -->
+                <label class="portal-card flex items-center justify-between p-4 rounded-2xl border border-black/8
+                              hover:border-primary/30 cursor-pointer transition-all has-[:checked]:border-primary
+                              has-[:checked]:bg-primary-light/15">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-emerald-50 text-primary rounded-xl flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-table-cells-large"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-on-surface">Portal Admin</p>
+                            <p class="text-[11px] text-on-surface-variant mt-0.5">admin.andromeda.andrescortes.dev</p>
+                            <p class="text-[11px] text-on-surface-variant">Gestión de eventos, empleados, métricas y PQRS</p>
+                        </div>
+                    </div>
+                    <div class="relative shrink-0 ml-4">
+                        <input type="checkbox" name="permiso_admin" class="sr-only peer" />
+                        <div class="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-primary transition-colors duration-300"></div>
+                        <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-300 peer-checked:translate-x-5"></div>
+                    </div>
+                </label>
+
+                <!-- Portal: Tickets -->
+                <label class="portal-card flex items-center justify-between p-4 rounded-2xl border border-black/8
+                              hover:border-primary/30 cursor-pointer transition-all has-[:checked]:border-primary
+                              has-[:checked]:bg-primary-light/15">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-ticket"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-on-surface">Portal Taquilla</p>
+                            <p class="text-[11px] text-on-surface-variant mt-0.5">tickets.andromeda.andrescortes.dev</p>
+                            <p class="text-[11px] text-on-surface-variant">Venta presencial e impresión de boletas</p>
+                        </div>
+                    </div>
+                    <div class="relative shrink-0 ml-4">
+                        <input type="checkbox" name="permiso_tickets" class="sr-only peer" />
+                        <div class="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-primary transition-colors duration-300"></div>
+                        <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-300 peer-checked:translate-x-5"></div>
+                    </div>
+                </label>
+
+                <!-- Portal: Access -->
+                <label class="portal-card flex items-center justify-between p-4 rounded-2xl border border-black/8
+                              hover:border-primary/30 cursor-pointer transition-all has-[:checked]:border-primary
+                              has-[:checked]:bg-primary-light/15">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-qrcode"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-on-surface">Portal Access</p>
+                            <p class="text-[11px] text-on-surface-variant mt-0.5">access.andromeda.andrescortes.dev</p>
+                            <p class="text-[11px] text-on-surface-variant">Escaneo de QR y control de ingreso al teatro</p>
+                        </div>
+                    </div>
+                    <div class="relative shrink-0 ml-4">
+                        <input type="checkbox" name="permiso_access" class="sr-only peer" />
+                        <div class="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-primary transition-colors duration-300"></div>
+                        <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-300 peer-checked:translate-x-5"></div>
+                    </div>
+                </label>
+
+            </div>
+
+            <!-- Aviso de seguridad -->
+            <div class="mt-4 flex items-start gap-2.5 p-3 rounded-2xl bg-amber-50 border border-amber-100">
+                <i class="fa-solid fa-triangle-exclamation text-amber-500 text-sm mt-0.5 shrink-0"></i>
+                <p class="text-[11px] text-amber-700">
+                    Cada permiso es <strong>independiente</strong>. Otorgar acceso a Taquilla no da acceso a Access ni a Admin.
+                    Revisa bien antes de guardar.
+                </p>
+            </div>
+        </div>
+
+        <!-- ===== ACCIONES ===== -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 animate-slide-up pb-4" style="animation-delay:.15s">
+            <a href="@Url.Action("Index","Staff")"
+               class="w-full sm:w-auto px-6 py-3 rounded-2xl border border-black/10 text-on-surface-variant
+                      text-sm font-semibold hover:bg-surface transition-all text-center">
+                Cancelar
+            </a>
+            <div class="flex gap-3 w-full sm:w-auto">
+                <button type="reset" onclick="resetAvatar()"
+                        class="flex-1 sm:flex-none px-6 py-3 rounded-2xl border border-black/10 text-on-surface-variant
+                               text-sm font-semibold hover:bg-surface active:scale-95 transition-all">
+                    <i class="fa-solid fa-rotate-left mr-1.5"></i> Limpiar
+                </button>
+                <button type="submit"
+                        class="flex-1 sm:flex-none px-6 py-3 rounded-2xl bg-primary text-white text-sm font-semibold
+                               hover:bg-primary-dark active:scale-95 transition-all shadow-md">
+                    <i class="fa-solid fa-user-plus mr-1.5"></i> Registrar Empleado
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</form>
+
+@section Scripts {
+<style>
+    .form-label { display:block; font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#6b6b63; margin-bottom:.4rem; }
+    .form-input { width:100%; padding:.7rem 1rem; background:#f6f3ee; border-radius:1rem; border:1px solid rgba(0,0,0,.08); font-size:.875rem; color:#1c1c19; transition:all .2s; }
+    .form-input:focus { outline:none; box-shadow:0 0 0 3px rgba(50,105,78,.15); border-color:rgba(50,105,78,.35); }
+</style>
+<script>
+// ── Avatar dinámico por iniciales ───────────
+const avatarColorClasses = [
+    'bg-emerald-100 text-emerald-700',
+    'bg-blue-100 text-blue-700',
+    'bg-violet-100 text-violet-700',
+    'bg-amber-100 text-amber-700',
+    'bg-rose-100 text-rose-700',
+    'bg-cyan-100 text-cyan-700',
+];
+let currentAvatarClass = avatarColorClasses[0];
+
+function actualizarAvatar() {
+    const nombre  = document.getElementById('inp-nombre').value.trim();
+    const cargo   = document.getElementById('inp-cargo')?.value.trim() || '';
+    const rolSel  = document.getElementById('sel-rol');
+    const rolText = rolSel.options[rolSel.selectedIndex]?.text || '';
+
+    // Iniciales (máx 2)
+    const palabras = nombre.split(' ').filter(Boolean);
+    const iniciales = palabras.length >= 2
+        ? (palabras[0][0] + palabras[1][0]).toUpperCase()
+        : nombre.length > 0 ? nombre[0].toUpperCase() : '??';
+
+    document.getElementById('avatar-iniciales').textContent = iniciales;
+    document.getElementById('avatar-nombre').textContent    = nombre   || 'Nombre Completo';
+    document.getElementById('avatar-cargo').textContent     = cargo    || rolText || 'Cargo / Rol';
+}
+
+function setAvatarColor(classes) {
+    currentAvatarClass = classes;
+    const circle = document.getElementById('avatar-circle');
+    // Quitar todas las clases de color anteriores
+    circle.className = `w-24 h-24 rounded-3xl flex items-center justify-center text-3xl font-black mb-4 shadow-sm select-none transition-all duration-300 ${classes}`;
+    // Marcar botón activo
+    document.querySelectorAll('[data-classes]').forEach(btn => {
+        btn.classList.toggle('ring-2', btn.dataset.classes === classes);
+        btn.classList.toggle('ring-primary', btn.dataset.classes === classes);
+        btn.classList.toggle('ring-offset-1', btn.dataset.classes === classes);
+    });
+}
+
+function resetAvatar() {
+    document.getElementById('avatar-iniciales').textContent = '??';
+    document.getElementById('avatar-nombre').textContent    = 'Nombre Completo';
+    document.getElementById('avatar-cargo').textContent     = 'Cargo / Rol';
+    setAvatarColor(avatarColorClasses[0]);
+}
+
+// ── Toggle contraseña ───────────────────────
+function togglePass() {
+    const inp  = document.getElementById('inp-pass');
+    const icon = document.getElementById('icon-pass');
+    const show = inp.type === 'password';
+    inp.type   = show ? 'text' : 'password';
+    icon.className = show ? 'fa-regular fa-eye-slash text-sm' : 'fa-regular fa-eye text-sm';
+}
+
+// ── Validación permisos antes de submit ─────
+document.getElementById('form-staff').addEventListener('submit', e => {
+    const admin   = document.querySelector('[name="permiso_admin"]').checked;
+    const tickets = document.querySelector('[name="permiso_tickets"]').checked;
+    const access  = document.querySelector('[name="permiso_access"]').checked;
+    if (!admin && !tickets && !access) {
+        e.preventDefault();
+        alert('Debes asignar al menos un permiso de portal al empleado.');
+    }
+});
+</script>
+}

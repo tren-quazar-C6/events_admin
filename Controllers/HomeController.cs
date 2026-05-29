@@ -106,7 +106,7 @@ public class HomeController : Controller
     }
 
     // 3. Endpoint para cerrar sesión
-    [HttpGet]
+    [HttpPost]
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync("TeatrosCookieAuth");
