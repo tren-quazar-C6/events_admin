@@ -1,233 +1,193 @@
-﻿@* <!DOCTYPE html> *@
-@* <html lang="en"> *@
-@* <head> *@
-@*     <meta charset="utf-8" /> *@
-@*     <meta name="viewport" content="width=device-width, initial-scale=1.0" /> *@
-@*     <title>@ViewData["Title"] - events_admin </title> *@
-@*     <script type="importmap"></script> *@
-@*     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" /> *@
-@*     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" /> *@
-@*     <link rel="stylesheet" href="~/events_admin.styles.css" asp-append-version="true" /> *@
-@* </head> *@
-@* <body> *@
-@*     <header> *@
-@*         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3"> *@
-@*             <div class="container-fluid"> *@
-@*                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">events_admin - prueba archivo events_admin</a> *@
-@*                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent" *@
-@*                         aria-expanded="false" aria-label="Toggle navigation"> *@
-@*                     <span class="navbar-toggler-icon"></span> *@
-@*                 </button> *@
-@*                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between"> *@
-@*                     <ul class="navbar-nav flex-grow-1"> *@
-@*                         <li class="nav-item"> *@
-@*                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a> *@
-@*                         </li> *@
-@*                         <li class="nav-item"> *@
-@*                             <a class="nav-link text-dark" asp-area="" asp-controller="Dashboard" asp-action="Index">Dashboard</a> *@
-@*                         </li> *@
-@*                         <li class="nav-item"> *@
-@*                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a> *@
-@*                         </li> *@
-@*                     </ul> *@
-@*                 </div> *@
-@*             </div> *@
-@*         </nav> *@
-@*     </header> *@
-@*     <div class="container"> *@
-@*         <main role="main" class="pb-3"> *@
-@*             @RenderBody() *@
-@*         </main> *@
-@*     </div> *@
-@* *@
-@*     <footer class="border-top footer text-muted"> *@
-@*         <div class="container"> *@
-@*             &copy; 2026 - events_admin - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a> *@
-@*         </div> *@
-@*     </footer> *@
-@*     <script src="~/lib/jquery/dist/jquery.min.js"></script> *@
-@*     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script> *@
-@*     <script src="~/js/site.js" asp-append-version="true"></script> *@
-@*     @await RenderSectionAsync("Scripts", required: false) *@
-@* </body> *@
-@* </html> *@
-
-<!DOCTYPE html>
-<html class="light" lang="es">
+﻿<!DOCTYPE html>
+<html lang="es">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>@ViewData["Title"] - Telón Admin</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — Telón Admin</title>
 
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/admin.css" />
 
-    <!-- Configuración Exacta del Tema Corporativo -->
     <script>
         tailwind.config = {
-            darkMode: "class",
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['DM Sans', 'sans-serif'],
+                        serif: ['DM Serif Display', 'serif'],
+                    },
                     colors: {
-                        "primary": "#32694e",
-                        "primary-container": "#cae6d6",
-                        "on-primary-container": "#08452e",
-                        "surface": "#fcf9f4",
-                        "on-surface": "#1c1c19",
-                        "surface-container-low": "#f6f3ee",
-                        "on-surface-variant": "#404943",
-                        "outline-variant": "#e5e2dd",
-                        "secondary-container": "#cae6d6",
-                        "on-secondary-container": "#4f685b"
+                        surface: '#f6f3ee',
+                        'on-surface': '#1c1c19',
+                        'on-surface-variant': '#6b6b63',
+                        primary: '#32694e',
+                        'primary-dark': '#254f3b',
+                        'primary-light': '#cae6d6',
+                        'primary-deep': '#08452e',
+                    },
+                    borderRadius: {
+                        '2xl': '1rem',
+                        '3xl': '1.5rem',
+                        '4xl': '2rem',
                     }
                 }
             }
         }
     </script>
-
-    <!-- Fuentes e Íconos con escape doble (@@) para Razor -->
-    <!-- CDN Oficial Completo de Font Awesome 6.5.1 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
 </head>
-<body class="bg-[#fdfbf7] text-on-surface min-h-screen antialiased">
+<body class="bg-surface font-sans text-on-surface antialiased flex h-screen overflow-hidden">
 
-<!-- CONTENEDOR RAÍZ DE LA APLICACIÓN -->
-<div class="flex min-h-screen w-full relative">
+    <!-- ===== OVERLAY (móvil) ===== -->
+    <div id="sidebar-overlay"
+         class="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 hidden opacity-0 transition-opacity duration-300"
+         onclick="closeSidebar()"></div>
 
-    <!-- ========================================================= -->
-    <!-- 1. SIDEBAR LATERAL (Oculto en móvil, visible en md)       -->
-    <!-- ========================================================= -->
-    <aside id="sidebar-menu"
-           class="fixed inset-y-0 left-0 z-50 w-64 my-4 ml-4 p-6 bg-[#f6f3ee] border border-black/5 rounded-[2rem] flex flex-col transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0">
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="sidebar"
+           class="fixed md:relative inset-y-0 left-0 w-64 shrink-0 bg-white border-r border-black/5 flex flex-col h-full z-40
+                  -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
 
-        <!-- Encabezado Sidebar -->
-        <div class="flex items-center justify-between mb-8 px-2">
+        <!-- Logo + botón cerrar (solo móvil) -->
+        <div class="px-6 py-6 border-b border-black/5 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-[#32694e] text-white rounded-2xl flex items-center justify-center">
-                    <i class="fa-solid fa-masks-theater"></i>
+                <div class="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center shadow-sm shrink-0">
+                    <i class="fa-solid fa-masks-theater text-white text-base"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-[#32694e] text-lg leading-tight">Telón Admin</h1>
-                    <p class="text-xs text-on-surface-variant">Gestión de teatro</p>
+                    <p class="font-extrabold text-on-surface text-sm leading-none">Telón Admin</p>
+                    <p class="text-[10px] text-on-surface-variant mt-0.5">Gestión de Teatro</p>
                 </div>
             </div>
-            <!-- Botón cerrar (Solo móvil) -->
-            <button onclick="toggleSidebar()" class="md:hidden p-2 rounded-full hover:bg-black/5">
-                <i class="fa-solid fa-xmark"></i>
+            <!-- X solo visible en móvil -->
+            <button onclick="closeSidebar()"
+                    class="md:hidden w-8 h-8 flex items-center justify-center rounded-xl hover:bg-surface text-on-surface-variant transition-colors">
+                <i class="fa-solid fa-xmark text-base"></i>
             </button>
         </div>
 
-        <!-- Navegación Menú -->
-        <nav class="flex flex-col gap-1 grow">
-            <a class="flex items-center gap-3 py-3 px-4 rounded-xl text-[#32694e] font-semibold bg-[#cae6d6]/40 border-r-4 border-[#32694e]"
-               asp-controller="Home" asp-action="Index">
-                <i class="fa-solid fa-chart-pie"></i>
-                <span class="text-sm">Dashboard</span>
-            </a>
+        <!-- Nav -->
+        <nav class="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
+            @{
+                var ctrl = ViewContext.RouteData.Values["controller"]?.ToString();
+                var act  = ViewContext.RouteData.Values["action"]?.ToString();
+                Func<string,string,string> Nav = (c,a) =>
+                    (ctrl==c && act==a)
+                    ? "flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-primary text-white font-semibold text-sm shadow-sm"
+                    : "flex items-center gap-3 px-4 py-2.5 rounded-2xl text-on-surface-variant hover:bg-surface hover:text-on-surface font-medium text-sm transition-all";
+            }
 
-            <a class="flex items-center gap-3 py-3 px-4 rounded-xl text-on-surface-variant hover:bg-black/5 transition-colors"
-               href="#">
-                <i class="fa-solid fa-ticket"></i>
-                <span class="text-sm">Eventos</span>
+            <a href="@Url.Action("Index","Dashboard")" class="@Nav("Dashboard","Index")">
+                <i class="fa-solid fa-table-cells-large w-4 text-center"></i><span>Dashboard</span>
             </a>
-
-            <a class="flex items-center gap-3 py-3 px-4 rounded-xl text-on-surface-variant hover:bg-black/5 transition-colors"
-               asp-controller="Empleados" asp-action="Index">
-                <i class="fa-solid fa-users"></i>
-                <span class="text-sm">Empleados</span>
+            <a href="@Url.Action("Index","Eventos")" class="@Nav("Eventos","Index")">
+                <i class="fa-solid fa-calendar-star w-4 text-center"></i><span>Eventos</span>
             </a>
-
-            <a class="flex items-center gap-3 py-3 px-4 rounded-xl text-on-surface-variant hover:bg-black/5 transition-colors"
-               href="#">
-                <i class="fa-solid fa-gear"></i>
-                <span class="text-sm">Configuración</span>
+            <a href="@Url.Action("Index","Staff")" class="@Nav("Staff","Index")">
+                <i class="fa-solid fa-users w-4 text-center"></i><span>Empleados</span>
             </a>
+            <a href="@Url.Action("Index","Pqrs")" class="@Nav("Pqrs","Index")">
+                <i class="fa-solid fa-comments w-4 text-center"></i><span>PQRS</span>
+                <span class="ml-auto bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">3</span>
+            </a>
+            <a href="@Url.Action("Index","Metricas")" class="@Nav("Metricas","Index")">
+                <i class="fa-solid fa-chart-line w-4 text-center"></i><span>Métricas</span>
+            </a>
+            <div class="pt-4 border-t border-black/5 mt-2">
+                <a href="@Url.Action("Index","Configuracion")" class="@Nav("Configuracion","Index")">
+                    <i class="fa-solid fa-gear w-4 text-center"></i><span>Configuración</span>
+                </a>
+            </div>
         </nav>
 
-        <!-- Botón Acción Inferior -->
-        <div class="pt-4 border-t border-black/5">
-            <button
-                class="w-full py-4 bg-[#32694e] text-white font-semibold rounded-2xl flex items-center justify-center gap-2 hover:bg-[#254f3b] transition-all shadow-sm">
-                <i class="fa-solid fa-plus"></i>
-                <span class="text-sm">Nuevo Evento</span>
-            </button>
+        <!-- CTA Nuevo Evento -->
+        @* <div class="px-4 pt-2 pb-3"> *@
+        @*     <a href="@Url.Action("Create","Eventos")" *@
+        @*        class="w-full bg-primary text-white py-3 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary-dark active:scale-95 transition-all shadow-sm"> *@
+        @*         <i class="fa-solid fa-plus"></i> Nuevo Evento *@
+        @*     </a> *@
+        @* </div> *@
+
+        <!-- ===== CERRAR SESIÓN ===== -->
+        <div class="px-4 pb-5 border-t border-black/5 pt-3">
+            <!-- Info del usuario -->
+            @* <div class="flex items-center gap-3 px-2 mb-3"> *@
+            @*     <img src="https://i.pravatar.cc/36?img=11" alt="Admin" *@
+            @*          class="w-9 h-9 rounded-xl object-cover shrink-0" /> *@
+            @*     <div class="min-w-0"> *@
+            @*         <p class="text-xs font-bold text-on-surface leading-none truncate">Eduardo V.</p> *@
+            @*         <p class="text-[10px] text-on-surface-variant mt-0.5 truncate">Gerente General</p> *@
+            @*     </div> *@
+            @* </div> *@
+            <!-- Botón logout -->
+            <form method="post" action="@Url.Action("Logout","Home")">
+                @Html.AntiForgeryToken()
+                <button type="submit"
+                        class="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-red-500 hover:bg-red-50 font-semibold text-sm transition-all group">
+                    <i class="fa-solid fa-right-from-bracket w-4 text-center group-hover:translate-x-0.5 transition-transform"></i>
+                    <span>Cerrar Sesión</span>
+                </button>
+            </form>
         </div>
     </aside>
 
-    <!-- Fondo Oscuro de Capa (Solo móvil cuando el menú está abierto) -->
-    <div id="sidebar-overlay" onclick="toggleSidebar()"
-         class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden md:hidden"></div>
+    <!-- ===== MAIN ===== -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden min-w-0">
 
-    <!-- ========================================================= -->
-    <!-- 2. CONTENEDOR DEL CONTENIDO PRINCIPAL                      -->
-    <!-- ========================================================= -->
-    <div class="flex-1 flex flex-col md:pl-72 min-w-0 min-h-screen">
+        <!-- Header -->
+        <header class="bg-white border-b border-black/5 px-4 md:px-8 py-4 flex items-center justify-between shrink-0 gap-3">
 
-        <!-- NAVBAR SUPERIOR -->
-        <header
-            class="flex justify-between items-center w-full px-6 md:px-12 h-20 bg-[#fdfbf7]/80 backdrop-blur-md sticky top-0 z-30">
-            <div class="flex items-center gap-4">
-                <!-- Botón Hamburguesa Móvil (¡Aquí está el que faltaba!) -->
-                <button onclick="toggleSidebar()"
-                        class="md:hidden p-2 rounded-xl bg-[#f6f3ee] border border-black/5 text-[#32694e]">
-                    <i class="fa-solid fa-bars"></i>
+            <!-- Hamburger (siempre visible) + título -->
+            <div class="flex items-center gap-3 min-w-0">
+                <button id="sidebar-toggle" onclick="toggleSidebar()"
+                        class="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface text-on-surface-variant transition-colors shrink-0"
+                        title="Mostrar/ocultar menú">
+                    <i id="toggle-icon" class="fa-solid fa-bars text-base"></i>
                 </button>
-                <h2 class="text-xl font-bold text-[#32694e]">Admin Dashboard</h2>
+                <h2 class="font-serif text-lg md:text-xl text-on-surface tracking-tight truncate">@ViewData["Title"]</h2>
             </div>
 
-            <!-- Buscador e Info Perfil -->
-            <div class="flex items-center gap-4">
-                <div class="hidden lg:flex items-center bg-[#f6f3ee] rounded-full px-4 py-2 border border-black/5">
-                    <i class="fa-solid fa-magnifying-glass mr-2"></i>
-                    <input class="bg-transparent border-none outline-none text-sm w-48"
-                           placeholder="Buscar eventos, ventas..." type="text"/>
+            <!-- Right actions -->
+            <div class="flex items-center gap-2 md:gap-4 shrink-0">
+                <!-- Búsqueda — oculta en móvil -->
+                <div class="relative hidden lg:block">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xs"></i>
+                    <input type="text" placeholder="Buscar eventos, ventas..."
+                           class="pl-9 pr-4 py-2 bg-surface rounded-xl text-sm border border-black/5 focus:outline-none w-56" />
                 </div>
 
-                <button class="p-2 rounded-full hover:bg-black/5 text-on-surface-variant relative">
-                    <i class="fa-solid fa-bell"></i>
+                <!-- Notificaciones -->
+                <button class="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface text-on-surface-variant transition-colors">
+                    <i class="fa-regular fa-bell text-base"></i>
+                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
                 </button>
 
-                <div class="flex items-center gap-3 border-l border-black/5 pl-4">
-                    <div class="flex flex-col text-right hidden sm:flex">
-                        <span class="font-bold text-sm text-on-surface">Eduardo V.</span>
-                        <span class="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Gerente General</span>
-                    </div>
-                    <div class="w-10 h-10 rounded-xl overflow-hidden border border-[#32694e]/20 shadow-sm">
-                        <img class="w-full h-full object-cover" src="https://ui-avatars.com"/>
+                <!-- Ayuda — oculta en móvil pequeño -->
+                <button class="hidden sm:flex w-9 h-9 items-center justify-center rounded-xl hover:bg-surface text-on-surface-variant transition-colors">
+                    <i class="fa-regular fa-circle-question text-base"></i>
+                </button>
+
+                <!-- Avatar + nombre -->
+                <div class="flex items-center gap-2.5 cursor-pointer group">
+                    <img src="https://i.pravatar.cc/36?img=11" alt="Admin"
+                         class="w-9 h-9 rounded-xl object-cover border-2 border-transparent group-hover:border-primary transition-all" />
+                    <div class="hidden md:block">
+                        <p class="text-xs font-bold text-on-surface leading-none">Eduardo V.</p>
+                        <p class="text-[10px] text-on-surface-variant mt-0.5">Gerente General</p>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- CONTENIDO DE LAS VISTAS INDEPENDIENTES (BENTO CANVAS) -->
-        <div class="flex-1 p-6 md:p-12 pt-2 max-w-7xl w-full mx-auto">
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8">
             @RenderBody()
-        </div>
-
+        </main>
     </div>
-</div>
 
-<!-- ========================================================= -->
-<!-- 3. INTERACTIVIDAD RESPONSIVA (MÓVIL)                       -->
-<!-- ========================================================= -->
-<script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById("sidebar-menu");
-        const overlay = document.getElementById("sidebar-overlay");
-
-        if (sidebar.classList.contains("-translate-x-full")) {
-            // Abrir menú en móvil
-            sidebar.classList.remove("-translate-x-full");
-            overlay.classList.remove("hidden");
-        } else {
-            // Cerrar menú en móvil
-            sidebar.classList.add("-translate-x-full");
-            overlay.classList.add("hidden");
-        }
-    }
-</script>
-
-@await RenderSectionAsync("Scripts", required: false)
+    <script src="~/js/admin.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

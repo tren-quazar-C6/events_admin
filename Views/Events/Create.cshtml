@@ -1,0 +1,134 @@
+@{
+    ViewData["Title"] = "Nuevo Evento";
+}
+
+
+@* ── BREADCRUMB ── *@
+<div class="te-breadcrumb">
+    <a href="@Url.Action("Index", "Events")" class="te-breadcrumb-link">
+        <i class="fa-solid fa-arrow-left"></i> Volver a Eventos
+    </a>
+</div>
+
+@* ── FORM CONTAINER ── *@
+<section class="grid grid-cols-1 lg:grid-cols-1 gap-6">
+    <div class="te-form-container">
+        <div class="te-form-intro">
+            <h2 class="te-form-heading">Detalles de la Obra</h2>
+            <p class="te-form-sub">
+                Complete la información para publicar su próximo evento. Use el editor
+                enriquecido para que la descripción destaque entre el público.
+            </p>
+        </div>
+
+        @using (Html.BeginForm("Create", "Events", FormMethod.Post,
+                        new { enctype = "multipart/form-data", @class = "te-form" }))
+        {
+            @Html.AntiForgeryToken()
+
+            @* ── FILA: Título + Categoría ── *@
+            <div class="te-form-row">
+                <div class="te-form-group te-form-group--grow">
+                    <label class="te-label">
+                        <i class="fa-solid fa-masks-theater te-label-icon"></i>
+                        Título del Evento
+                    </label>
+                    <input type="text" name="Titulo" class="te-input"
+                           placeholder="Ej. El Fantasma de la Ópera"/>
+                </div>
+                <div class="te-form-group te-form-group--fixed">
+                    <label class="te-label">Categoría</label>
+                    <div class="te-select-wrap">
+                        <select name="Categoria" class="te-select">
+                            <option value="">Seleccionar</option>
+                            <option>Drama</option>
+                            <option>Musical</option>
+                            <option>Comedia</option>
+                            <option>Ballet</option>
+                            <option>Ópera</option>
+                            <option>Concierto</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down te-select-arrow"></i>
+                    </div>
+                </div>
+            </div>
+
+            @* ── FILA: Descripción + Imagen ── *@
+            <div class="te-form-row te-form-row--top">
+                <div class="te-form-group te-form-group--grow">
+                    <label class="te-label">Descripción</label>
+                    <div class="te-editor-wrap">
+                        <div class="te-editor-toolbar">
+                            <button type="button" class="te-toolbar-btn te-toolbar-btn--bold"
+                                    onclick="document.execCommand('bold')">B
+                            </button>
+                            <button type="button" class="te-toolbar-btn te-toolbar-btn--italic"
+                                    onclick="document.execCommand('italic')">I
+                            </button>
+                            <button type="button" class="te-toolbar-btn"
+                                    onclick="document.execCommand('insertUnorderedList')">
+                                <i class="fa-solid fa-list-ul"></i>
+                            </button>
+                        </div>
+                        <div id="te-editor"
+                             contenteditable="true"
+                             class="te-editor"
+                             placeholder="Escriba aquí la descripción de la obra..."></div>
+                        <input type="hidden" name="Descripcion" id="te-descripcion-hidden"/>
+                    </div>
+                </div>
+
+                <div class="te-form-group te-form-group--img">
+                    <label class="te-label">Imagen de Portada</label>
+                    <label class="te-img-upload" for="te-img-input" id="te-img-label">
+                        <div class="te-img-placeholder" id="te-img-placeholder">
+                            <div class="te-img-icon">
+                                <i class="fa-regular fa-image"></i>
+                            </div>
+                            <span class="te-img-text">Subir Poster</span>
+                            <span class="te-img-hint">Recomendado: 1200 x 1600 px</span>
+                        </div>
+                        <img id="te-img-preview" class="te-img-preview hidden" alt="Preview"/>
+                        <input type="file" id="te-img-input" name="ImagenFile"
+                               accept="image/*" class="te-img-file-input"/>
+                    </label>
+                </div>
+            </div>
+
+            @* ── FOOTER DEL FORM ── *@
+            <div class="te-form-footer">
+                <a href="@Url.Action("Index", "Events")" class="te-footer-btn">
+                    <i class="fa-regular fa-calendar"></i> Fecha y Hora
+                </a>
+                <button type="submit" class="te-footer-btn te-footer-btn--primary">
+                    <i class="fa-solid fa-ticket"></i> Precios de Tickets
+                </button>
+            </div>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Sync editor → hidden input on submit
+        document.querySelector('form').addEventListener('submit', function () {
+            document.getElementById('te-descripcion-hidden').value =
+                document.getElementById('te-editor').innerHTML;
+        });
+
+        // Image preview
+        document.getElementById('te-img-input').addEventListener('change', function () {
+            var file = this.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var preview = document.getElementById('te-img-preview');
+                var placeholder = document.getElementById('te-img-placeholder');
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
+    </script>
+}

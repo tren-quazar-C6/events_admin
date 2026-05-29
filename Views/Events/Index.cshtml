@@ -1,0 +1,104 @@
+@{
+    ViewData["Title"] = "Gestión de Eventos";
+}
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="lg:col-span-2 bg-white rounded-3xl p-6 border border-black/5 shadow-sm animate-slide-up flex items-center justify-between mb-3">
+        <div class="flex items-center justify-start gap-2">
+            <span class="te-filter-label">Filtrar por:</span>
+            @{
+                var cats = new[] { "Todos", "Teatro", "Musical", "Concierto" };
+                var active = ViewBag.Categoria as string ?? "Todos";
+            }
+            @foreach (var c in cats)
+            {
+                <a href="@Url.Action("Index", "Events", new { categoria = c == "Todos" ? null : c })"
+                   class="bg-primary-light text-white px-3 py-1 rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-primary-dark active scale-95 transition-all shadow-md whitespace-nowrap text-sm @(c == active ? "bg-primary" : "")">
+                    @c
+                </a>
+                @* <a href="@Url.Action("Index", "Events", new { categoria = c == "Todos" ? null : c })" *@
+                @*    class="te-pill bg-primary @(c == active ? "te-pill--active" : "")">@c</a> *@
+            }
+        </div>
+        <div>
+            <a href="@Url.Action("Create", "Events")"
+               class="bg-primary text-white px-6 py-3 rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-primary-dark active:scale-95 transition-all shadow-md whitespace-nowrap text-sm">
+                <i b-pmi5czaz76="" class="fa-solid fa-plus"></i> Nuevo Evento
+            </a>
+        </div>
+    </div>
+</section>
+<section class="grid grid-cols-1 lg:grid-cols-1 gap-6">
+
+    <!-- PRÓXIMAS FUNCIONES -->
+    <div class="lg:col-span-2 bg-white rounded-3xl p-6 border border-black/5 shadow-sm animate-slide-up"
+         style="animation-delay:.2s">
+        <div class="flex justify-between items-center mb-6">
+            <h4 class="font-bold text-lg text-on-surface">Próximas Funciones en Sala</h4>
+            <a href="@Url.Action("Index", "Eventos")"
+               class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                Ver cartelera completa <i class="fa-solid fa-chevron-right text-[10px]"></i>
+            </a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                <tr class="border-b border-black/5 text-xs text-on-surface-variant uppercase tracking-wider">
+                    <th class="pb-3 font-semibold">Obra</th>
+                    <th class="pb-3 font-semibold">Categoría</th>
+                    <th class="pb-3 font-semibold">Fecha y Hora</th>
+                    <th class="pb-3 font-semibold">Precio</th>
+                    <th class="pb-3 font-semibold">Estado</th>
+                    <th class="pb-3 font-semibold text-right">Acciones</th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-black/5 text-sm">
+                @{
+                    var funciones = new[]
+                    {
+                        new { img = "https://i.pravatar.cc/48?img=15", nombre = "Romeo y Julieta", tipo = "Drama Clásico", fecha = "May 29, 2026 – 20:00", precio = "65000 COP", pct = 95, badge = "bg-emerald-100 text-emerald-800", estado = "Activo", estadoCls = "te-estado--activo" },
+                        new { img = "https://i.pravatar.cc/48?img=3", nombre = "El Lago de los Cisnes", tipo = "Ballet", fecha = "Jun 02, 2026 – 18:30", precio = "40000 COP", pct = 60, badge = "bg-amber-100 text-amber-800", estado = "Borrador", estadoCls = "te-estado--borrador" },
+                        new { img = "https://i.pravatar.cc/48?img=22", nombre = "Stand-Up Comedy Show", tipo = "Comedia", fecha = "Jun 05, 2026 – 21:00", precio = "50000 COP", pct = 45, badge = "bg-blue-100 text-blue-800", estado = "Agotado", estadoCls = "te-estado--agotado" },
+                        new { img = "https://i.pravatar.cc/48?img=22", nombre = "La Traviata", tipo = "Ópera", fecha = "Jun 10, 2026 – 19:00", precio = "45000 COP", pct = 78, badge = "bg-violet-100 text-violet-800", estado = "Activo", estadoCls = "te-estado--activo" },
+                    };
+                }
+                @foreach (var f in funciones)
+                {
+                    <tr class="hover:bg-surface/50 transition-colors">
+                        <td class="py-4 text-on-surface-variant text-xs">
+                            <div class="te-obra-cell">
+                                <img src="@f.img" alt="@f.nombre" class="te-obra-img"/>
+                                <div>
+                                    @f.nombre
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 text-on-surface-variant text-xs">
+                            <p class="text-[11px] text-on-surface-variant">@f.tipo</p>
+                        </td>
+                        <td class="py-4 text-on-surface-variant text-xs">@f.fecha</td>
+                        <td class="py-4 text-on-surface-variant text-xs">@f.precio</td>
+                        <td class="py-4 text-on-surface-variant text-xs">
+                            <span class="te-estado @f.estadoCls">
+                                <span class="te-estado-dot"></span> @f.estado
+                            </span>
+                        </td>
+                        <td class="py-4 text-right">
+                            <div class="te-actions">
+                                <button class="te-action-btn" title="Editar">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button class="te-action-btn" title="Duplicar">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                                <button class="te-action-btn te-action-btn--danger" title="Eliminar">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
