@@ -1,199 +1,174 @@
+@model IEnumerable<AdminEventoResumenDto>
 @{
     ViewData["Title"] = "Gestión de Eventos";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <!-- ===== FILTROS + ACCIÓN ===== -->
-<section class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-fade-in">
-    <div class="flex items-center gap-2 flex-wrap">
-        <span class="text-xs font-bold text-on-surface-variant mr-1">Filtrar por:</span>
-        @{
-            var filtros = new[] { "Todos", "Teatro", "Musical", "Concierto", "Ballet", "Ópera" };
-        }
-        @foreach (var f in filtros)
-        {
-            var isActive = f == "Todos";
-            <button onclick="setFilter(this, '@f')"
-                    class="filter-btn px-4 py-1.5 rounded-full text-xs font-semibold border transition-all
-                           @(isActive
-                               ? "bg-primary text-white border-primary shadow-sm"
-                               : "bg-white text-on-surface-variant border-black/10 hover:border-primary hover:text-primary")">
-                @f
-            </button>
-        }
-    </div>
-    <a href="@Url.Action("Create","Events")"
+<section class="flex flex-col sm:flex-row sm:items-center justify-end gap-4 mb-8 animate-fade-in">
+    <a href="@Url.Action("Create", "Events")"
        class="bg-primary text-white px-5 py-2.5 rounded-full font-semibold text-sm flex items-center gap-2 hover:bg-primary-dark active:scale-95 transition-all shadow-md whitespace-nowrap self-start sm:self-auto">
         <i class="fa-solid fa-plus"></i> Nuevo Evento
     </a>
 </section>
 
 <!-- ===== TABLA DE EVENTOS ===== -->
-<section class="bg-white rounded-3xl border border-black/5 shadow-sm overflow-hidden mb-8 animate-slide-up" style="animation-delay:.05s">
+<section class="bg-white rounded-3xl border border-black/5 shadow-sm overflow-hidden mb-8 animate-slide-up"
+         style="animation-delay:.05s">
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="border-b border-black/5 bg-surface/60 text-xs text-on-surface-variant uppercase tracking-wider">
-                    <th class="px-6 py-4 font-semibold">Obra</th>
-                    <th class="px-4 py-4 font-semibold">Categoría</th>
-                    <th class="px-4 py-4 font-semibold">Fecha / Hora</th>
-                    <th class="px-4 py-4 font-semibold">Precio</th>
-                    <th class="px-4 py-4 font-semibold">Estado</th>
-                    <th class="px-6 py-4 font-semibold text-right">Acciones</th>
-                </tr>
+            <tr class="border-b border-black/5 bg-surface/60 text-xs text-on-surface-variant uppercase tracking-wider">
+                <th class="px-6 py-4 font-semibold">Evento</th>
+                <th class="px-6 py-4 font-semibold">Tipo</th>
+                <th class="px-6 py-4 font-semibold">Fecha / Hora</th>
+                <th class="px-6 py-4 font-semibold">Capacidad</th>
+                <th class="px-6 py-4 font-semibold">Estado</th>
+                <th class="px-6 py-4 font-semibold">Acciones</th>
+            </tr>
             </thead>
             <tbody class="divide-y divide-black/5 text-sm" id="eventos-body">
-                @{
-                    var eventos = new[]
-                    {
-                        new { img="https://picsum.photos/seed/tea1/60/60", nombre="La Casa de Bernarda Alba", compania="Compañía Real de Madrid", categoria="Teatro",   fecha="15 Oct, 2023", hora="20:30h", precio="45.00€", estado="Activo",   estadoColor="emerald" },
-                        new { img="https://picsum.photos/seed/con1/60/60", nombre="Sinfonía de Otoño",          compania="Orquesta Filarmónica",      categoria="Concierto", fecha="22 Oct, 2023", hora="19:00h", precio="32.50€", estado="Borrador", estadoColor="gray"    },
-                        new { img="https://picsum.photos/seed/mus1/60/60", nombre="Luces de Neón",              compania="Broadway Producciones",      categoria="Musical",   fecha="05 Nov, 2023", hora="21:00h", precio="65.00€", estado="Agotado",  estadoColor="red"     },
-                        new { img="https://picsum.photos/seed/bal1/60/60", nombre="El Lago de los Cisnes",      compania="Ballet Nacional",            categoria="Ballet",    fecha="12 Nov, 2023", hora="18:30h", precio="55.00€", estado="Activo",   estadoColor="emerald" },
-                        new { img="https://picsum.photos/seed/ope1/60/60", nombre="La Traviata",                compania="Ópera de Colombia",          categoria="Ópera",     fecha="20 Nov, 2023", hora="19:00h", precio="70.00€", estado="Activo",   estadoColor="emerald" },
-                        new { img="https://picsum.photos/seed/tea2/60/60", nombre="Bodas de Sangre",            compania="Teatro Libre",               categoria="Teatro",    fecha="28 Nov, 2023", hora="20:00h", precio="38.00€", estado="Borrador", estadoColor="gray"    },
-                    };
-
-                    var badgeMap = new Dictionary<string,(string bg, string text)>
-                    {
-                        ["Teatro"]    = ("bg-blue-100",    "text-blue-700"),
-                        ["Concierto"] = ("bg-violet-100",  "text-violet-700"),
-                        ["Musical"]   = ("bg-pink-100",    "text-pink-700"),
-                        ["Ballet"]    = ("bg-rose-100",    "text-rose-700"),
-                        ["Ópera"]     = ("bg-amber-100",   "text-amber-700"),
-                    };
-
-                    var estadoMap = new Dictionary<string, string>
-                    {
-                        ["emerald"] = "bg-emerald-100 text-emerald-700",
-                        ["gray"]    = "bg-gray-100 text-gray-500",
-                        ["red"]     = "bg-red-100 text-red-600",
-                    };
-
-                    var dotMap = new Dictionary<string, string>
-                    {
-                        ["emerald"] = "bg-emerald-500",
-                        ["gray"]    = "bg-gray-400",
-                        ["red"]     = "bg-red-500",
-                    };
-                }
-
-                @foreach (var e in eventos)
+            @foreach (var e in Model)
+            {
+                var estadoClase = e.status switch
                 {
-                    var (catBg, catText) = badgeMap.ContainsKey(e.categoria) ? badgeMap[e.categoria] : ("bg-gray-100","text-gray-600");
-                    <tr class="hover:bg-surface/40 transition-colors evento-row" data-categoria="@e.categoria">
-                        <!-- Obra -->
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-4">
-                                <img src="@e.img" alt="@e.nombre"
-                                     class="w-12 h-12 rounded-2xl object-cover shrink-0 shadow-sm" />
-                                <div>
-                                    <p class="font-semibold text-on-surface">@e.nombre</p>
-                                    <p class="text-[11px] text-on-surface-variant mt-0.5">@e.compania</p>
-                                </div>
+                    "PUBLISHED" => "bg-emerald-100 text-emerald-700",
+                    "DRAFT" => "bg-gray-100 text-gray-600",
+                    "CANCELLED" => "bg-red-100 text-red-600",
+                    _ => "bg-gray-100 text-gray-600"
+                };
+
+                <tr class="hover:bg-surface/40 transition-colors">
+
+                    <!-- Evento -->
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-4">
+
+                            <img src="@(string.IsNullOrEmpty(e.imagen_principal)
+                                          ? "/images/no-image.png"
+                                          : e.imagen_principal)"
+                                 class="w-12 h-12 rounded-2xl object-cover"/>
+
+                            <div>
+                                <p class="font-semibold">
+                                    @e.nombre_evento
+                                </p>
                             </div>
-                        </td>
-                        <!-- Categoría -->
-                        <td class="px-4 py-4">
-                            <span class="@catBg @catText text-[11px] font-semibold px-3 py-1 rounded-full">@e.categoria</span>
-                        </td>
-                        <!-- Fecha -->
-                        <td class="px-4 py-4">
-                            <p class="font-medium text-on-surface text-xs">@e.fecha</p>
-                            <p class="text-[11px] text-on-surface-variant mt-0.5">@e.hora</p>
-                        </td>
-                        <!-- Precio -->
-                        <td class="px-4 py-4">
-                            <span class="font-bold text-on-surface">@e.precio</span>
-                        </td>
-                        <!-- Estado -->
-                        <td class="px-4 py-4">
-                            <span class="inline-flex items-center gap-1.5 @estadoMap[e.estadoColor] text-[11px] font-semibold px-3 py-1 rounded-full">
-                                <span class="w-1.5 h-1.5 rounded-full @dotMap[e.estadoColor]"></span>
-                                @e.estado
+                        </div>
+                    </td>
+
+                    <!-- Categoría -->
+                    <td class="px-4 py-4">
+                        @e.tipo_evento
+                    </td>
+
+                    <!-- Fecha -->
+                    <td class="px-4 py-4">
+                        <p>
+                            @e.fecha_evento.ToString("dd/MM/yyyy")
+                        </p>
+
+                        <p class="text-xs text-gray-500">
+                            @e.fecha_evento.ToString("HH:mm")
+                        </p>
+                    </td>
+
+                    <!-- Capacidad -->
+                    <td class="px-4 py-4">
+                        @e.capacidad_total
+                    </td>
+
+                    <!-- Estado -->
+                    <td class="px-4 py-4">
+                            <span class="@estadoClase px-3 py-1 rounded-full text-xs font-semibold">
+                                @e.status
                             </span>
-                        </td>
-                        <!-- Acciones -->
-                        <td class="px-6 py-4 text-right">
-                            <div class="flex items-center justify-end gap-1">
-                                <a href="@Url.Action("Edit","Events", new { id = 1 })"
-                                   class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-blue-50 text-on-surface-variant hover:text-blue-600 transition-all"
-                                   title="Editar">
-                                    <i class="fa-regular fa-pen-to-square text-sm"></i>
-                                </a>
-                                <button onclick="duplicarEvento(this)"
-                                        class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-amber-50 text-on-surface-variant hover:text-amber-600 transition-all"
-                                        title="Duplicar">
-                                    <i class="fa-regular fa-copy text-sm"></i>
-                                </button>
-                                <button onclick="confirmarEliminar(this)"
-                                        class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-red-50 text-on-surface-variant hover:text-red-500 transition-all"
-                                        title="Eliminar">
-                                    <i class="fa-regular fa-trash-can text-sm"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                }
+                    </td>
+
+                    <!-- Acciones -->
+                    <td class="px-6 py-4 text-right">
+                        <a href="@Url.Action("Detail", "Events", new { id = e.id_evento })">
+                            Ver
+                        </a>
+                    </td>
+
+                </tr>
+            }
             </tbody>
         </table>
     </div>
 
     <!-- Footer tabla: contador + paginación -->
     <div class="px-6 py-4 border-t border-black/5 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <p class="text-xs text-on-surface-variant" id="conteo-eventos">Mostrando 1–6 de 12 eventos</p>
+        <p class="text-xs text-on-surface-variant" id="conteo-eventos">
+            Mostrando @Model.Count() de @ViewBag.TotalRecords eventos</p>
         <div class="flex items-center gap-1">
-            <button class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-surface text-on-surface-variant transition-colors">
-                <i class="fa-solid fa-chevron-left text-xs"></i>
-            </button>
-            @foreach (var p in new[]{1,2,3})
+            @if (ViewBag.Page > 1)
             {
-                <button class="w-8 h-8 flex items-center justify-center rounded-xl text-xs font-bold transition-all
-                               @(p == 1 ? "bg-primary text-white shadow-sm" : "hover:bg-surface text-on-surface-variant")">
-                    @p
-                </button>
+                <a asp-action="Index"
+                   asp-route-page="@(ViewBag.Page - 1)"
+                   class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-surface">
+                    <i class="fa-solid fa-chevron-left text-xs"></i>
+                </a>
             }
-            <button class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-surface text-on-surface-variant transition-colors">
-                <i class="fa-solid fa-chevron-right text-xs"></i>
-            </button>
+            @for (int p = 1; p <= ViewBag.TotalPages; p++)
+            {
+                <a asp-action="Index"
+                   asp-route-page="@p"
+                   class="w-8 h-8 flex items-center justify-center rounded-xl text-xs font-bold transition-all
+       @(p == ViewBag.Page
+                                     ? "bg-primary text-white shadow-sm"
+                                     : "hover:bg-surface text-on-surface-variant")">
+                    @p
+                </a>
+            }
+            @if (ViewBag.Page < ViewBag.TotalPages)
+            {
+                <a asp-action="Index"
+                   asp-route-page="@(ViewBag.Page + 1)"
+                   class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-surface">
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                </a>
+            }
         </div>
     </div>
 </section>
 
 <!-- ===== MÉTRICAS RÁPIDAS ===== -->
-<section class="grid grid-cols-1 sm:grid-cols-3 gap-6 animate-slide-up" style="animation-delay:.15s">
-
-    <!-- Ventas del Mes -->
-    <div class="bg-primary-light rounded-3xl p-6 flex flex-col gap-3 hover:shadow-md transition-all">
-        <div class="flex items-center gap-2 text-primary-deep">
-            <i class="fa-solid fa-arrow-trend-up text-base"></i>
-            <span class="text-xs font-bold uppercase tracking-wider">Ventas del Mes</span>
-        </div>
-        <h4 class="text-4xl font-black text-primary-deep">$12.4k</h4>
-        <p class="text-xs text-primary font-semibold">+15% vs mes anterior</p>
-    </div>
-
-    <!-- Asistencia Promedio -->
-    <div class="bg-white rounded-3xl p-6 border border-black/5 shadow-sm flex flex-col gap-3 hover:shadow-md transition-all">
-        <div class="flex items-center gap-2 text-on-surface-variant">
-            <i class="fa-solid fa-ticket text-base"></i>
-            <span class="text-xs font-bold uppercase tracking-wider">Asistencia Promedio</span>
-        </div>
-        <h4 class="text-4xl font-black text-on-surface">88%</h4>
-        <p class="text-xs text-on-surface-variant">Ocupación salas principales</p>
-    </div>
-
-    <!-- Mejor Valorada -->
-    <div class="bg-amber-50 rounded-3xl p-6 border border-amber-100 flex flex-col gap-3 hover:shadow-md transition-all">
-        <div class="flex items-center gap-2 text-amber-600">
-            <i class="fa-solid fa-star text-base"></i>
-            <span class="text-xs font-bold uppercase tracking-wider">Mejor Valorada</span>
-        </div>
-        <p class="text-base font-black text-amber-700">Sinfonía de Otoño</p>
-        <p class="text-xs text-amber-600 font-semibold">4.9/5 basado en 340 reseñas</p>
-    </div>
-
-</section>
+@* <section class="grid grid-cols-1 sm:grid-cols-3 gap-6 animate-slide-up" style="animation-delay:.15s"> *@
+@* *@
+@*     <!-- Ventas del Mes --> *@
+@*     <div class="bg-primary-light rounded-3xl p-6 flex flex-col gap-3 hover:shadow-md transition-all"> *@
+@*         <div class="flex items-center gap-2 text-primary-deep"> *@
+@*             <i class="fa-solid fa-arrow-trend-up text-base"></i> *@
+@*             <span class="text-xs font-bold uppercase tracking-wider">Ventas del Mes</span> *@
+@*         </div> *@
+@*         <h4 class="text-4xl font-black text-primary-deep">$12.4k</h4> *@
+@*         <p class="text-xs text-primary font-semibold">+15% vs mes anterior</p> *@
+@*     </div> *@
+@* *@
+@*     <!-- Asistencia Promedio --> *@
+@*     <div *@
+@*         class="bg-white rounded-3xl p-6 border border-black/5 shadow-sm flex flex-col gap-3 hover:shadow-md transition-all"> *@
+@*         <div class="flex items-center gap-2 text-on-surface-variant"> *@
+@*             <i class="fa-solid fa-ticket text-base"></i> *@
+@*             <span class="text-xs font-bold uppercase tracking-wider">Asistencia Promedio</span> *@
+@*         </div> *@
+@*         <h4 class="text-4xl font-black text-on-surface">88%</h4> *@
+@*         <p class="text-xs text-on-surface-variant">Ocupación salas principales</p> *@
+@*     </div> *@
+@* *@
+@*     <!-- Mejor Valorada --> *@
+@*     <div class="bg-amber-50 rounded-3xl p-6 border border-amber-100 flex flex-col gap-3 hover:shadow-md transition-all"> *@
+@*         <div class="flex items-center gap-2 text-amber-600"> *@
+@*             <i class="fa-solid fa-star text-base"></i> *@
+@*             <span class="text-xs font-bold uppercase tracking-wider">Mejor Valorada</span> *@
+@*         </div> *@
+@*         <p class="text-base font-black text-amber-700">Sinfonía de Otoño</p> *@
+@*         <p class="text-xs text-amber-600 font-semibold">4.9/5 basado en 340 reseñas</p> *@
+@*     </div> *@
+@* *@
+@* </section> *@
 
 <!-- ===== MODAL CONFIRMACIÓN ELIMINAR ===== -->
 <div id="modal-eliminar" class="fixed inset-0 z-50 hidden flex items-center justify-center">
@@ -203,7 +178,8 @@
             <i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl"></i>
         </div>
         <h3 class="text-lg font-bold text-on-surface text-center mb-2">¿Eliminar evento?</h3>
-        <p class="text-sm text-on-surface-variant text-center mb-6">Esta acción no se puede deshacer. El evento y sus boletas serán eliminados permanentemente.</p>
+        <p class="text-sm text-on-surface-variant text-center mb-6">Esta acción no se puede deshacer. El evento y sus
+            boletas serán eliminados permanentemente.</p>
         <div class="flex gap-3">
             <button onclick="cerrarModal()"
                     class="flex-1 py-2.5 rounded-2xl border border-black/10 text-on-surface-variant text-sm font-semibold hover:bg-surface transition-all">
@@ -218,65 +194,65 @@
 </div>
 
 @section Scripts {
-<script>
-// Filtro por categoría
-function setFilter(btn, categoria) {
-    // Actualizar estilos botones
-    document.querySelectorAll('.filter-btn').forEach(b => {
-        b.classList.remove('bg-primary','text-white','border-primary','shadow-sm');
-        b.classList.add('bg-white','text-on-surface-variant','border-black/10');
-    });
-    btn.classList.add('bg-primary','text-white','border-primary','shadow-sm');
-    btn.classList.remove('bg-white','text-on-surface-variant','border-black/10');
+    <script>
+        // Filtro por categoría
+        function setFilter(btn, categoria) {
+            // Actualizar estilos botones
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('bg-primary', 'text-white', 'border-primary', 'shadow-sm');
+                b.classList.add('bg-white', 'text-on-surface-variant', 'border-black/10');
+            });
+            btn.classList.add('bg-primary', 'text-white', 'border-primary', 'shadow-sm');
+            btn.classList.remove('bg-white', 'text-on-surface-variant', 'border-black/10');
 
-    // Filtrar filas
-    const rows = document.querySelectorAll('.evento-row');
-    let visible = 0;
-    rows.forEach(row => {
-        const match = categoria === 'Todos' || row.dataset.categoria === categoria;
-        row.style.display = match ? '' : 'none';
-        if (match) visible++;
-    });
-    document.getElementById('conteo-eventos').textContent =
-        `Mostrando 1–${visible} de ${rows.length} eventos`;
-}
+            // Filtrar filas
+            const rows = document.querySelectorAll('.evento-row');
+            let visible = 0;
+            rows.forEach(row => {
+                const match = categoria === 'Todos' || row.dataset.categoria === categoria;
+                row.style.display = match ? '' : 'none';
+                if (match) visible++;
+            });
+            document.getElementById('conteo-eventos').textContent =
+                `Mostrando 1–${visible} de ${rows.length} eventos`;
+        }
 
-// Modal eliminar
-let filaAEliminar = null;
+        // Modal eliminar
+        let filaAEliminar = null;
 
-function confirmarEliminar(btn) {
-    filaAEliminar = btn.closest('tr');
-    document.getElementById('modal-eliminar').classList.remove('hidden');
-    document.getElementById('modal-eliminar').classList.add('flex');
-}
+        function confirmarEliminar(btn) {
+            filaAEliminar = btn.closest('tr');
+            document.getElementById('modal-eliminar').classList.remove('hidden');
+            document.getElementById('modal-eliminar').classList.add('flex');
+        }
 
-function cerrarModal() {
-    document.getElementById('modal-eliminar').classList.add('hidden');
-    document.getElementById('modal-eliminar').classList.remove('flex');
-    filaAEliminar = null;
-}
+        function cerrarModal() {
+            document.getElementById('modal-eliminar').classList.add('hidden');
+            document.getElementById('modal-eliminar').classList.remove('flex');
+            filaAEliminar = null;
+        }
 
-function ejecutarEliminar() {
-    if (filaAEliminar) {
-        filaAEliminar.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-        filaAEliminar.style.opacity = '0';
-        filaAEliminar.style.transform = 'translateX(20px)';
-        setTimeout(() => filaAEliminar.remove(), 300);
-    }
-    cerrarModal();
-}
+        function ejecutarEliminar() {
+            if (filaAEliminar) {
+                filaAEliminar.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                filaAEliminar.style.opacity = '0';
+                filaAEliminar.style.transform = 'translateX(20px)';
+                setTimeout(() => filaAEliminar.remove(), 300);
+            }
+            cerrarModal();
+        }
 
-function duplicarEvento(btn) {
-    const fila = btn.closest('tr');
-    const clone = fila.cloneNode(true);
-    clone.style.opacity = '0';
-    clone.style.transform = 'translateY(-8px)';
-    fila.parentNode.insertBefore(clone, fila.nextSibling);
-    requestAnimationFrame(() => {
-        clone.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-        clone.style.opacity = '1';
-        clone.style.transform = 'translateY(0)';
-    });
-}
-</script>
+        function duplicarEvento(btn) {
+            const fila = btn.closest('tr');
+            const clone = fila.cloneNode(true);
+            clone.style.opacity = '0';
+            clone.style.transform = 'translateY(-8px)';
+            fila.parentNode.insertBefore(clone, fila.nextSibling);
+            requestAnimationFrame(() => {
+                clone.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                clone.style.opacity = '1';
+                clone.style.transform = 'translateY(0)';
+            });
+        }
+    </script>
 }

@@ -18,7 +18,7 @@ public class HomeController : Controller
     {
         _clientFactory = clientFactory;
     }
-    
+
     [Authorize]
     public IActionResult Index()
     {
@@ -39,9 +39,9 @@ public class HomeController : Controller
 
     // 2. Procesar el formulario enviado por el usuario
     [HttpPost]
-    public async Task<IActionResult> Login(string email, string password)
+    public async Task<IActionResult> Login(string correo, string clave)
     {
-        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+        if (string.IsNullOrEmpty(correo) || string.IsNullOrEmpty(clave))
         {
             ViewBag.Error = "Por favor, completa todos los campos.";
             return View();
@@ -52,7 +52,7 @@ public class HomeController : Controller
             var client = _clientFactory.CreateClient();
 
             // Petición POST con el formato JSON que tu API espera
-            var loginData = new { correo = email, contrasena = password };
+            var loginData = new { email = correo, password = clave };
             var content = new StringContent(JsonSerializer.Serialize(loginData), Encoding.UTF8, "application/json");
 
             // URL real de tu API en C#
@@ -64,30 +64,37 @@ public class HomeController : Controller
                 return View();
             }
 
-            // Leer respuesta de la API (AuthResponseDto)
+            // Leer respuesta de la API
             var responseBody = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(responseBody);
             var root = doc.RootElement;
 
-            string tokenString = root.GetProperty("token").GetString()!;
+            // CORRECCIÓN PRINCIPAL: Tu API en Postman devuelve "success", no "isSuccess"
+            if (!root.GetProperty("success").GetBoolean())
+            {
+                ViewBag.Error = "Credenciales incorrectas.";
+                return View();
+            }
 
-            // 3. Decodificar el JWT en el servidor para leer el Rol y Nombre
+            var dataNode = root.GetProperty("data");
+            string tokenString = dataNode.GetProperty("token").GetString()!;
+
+            // Decodificar el JWT en el servidor
             var handler = new JwtSecurityTokenHandler();
             var jwtToken = handler.ReadJwtToken(tokenString);
 
-            // Extraer los claims estándares de .NET
-            var nameClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "http://xmlsoap.org")?.Value;
-            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "http://microsoft.com")?.Value;
-            var idClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "http://xmlsoap.orgidentifier")?.Value;
+            // Extraer los claims con sus nombres correctos del JWT
+            var nameClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value;
+            var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "role")?.Value;
+            var idClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
 
-            // 4. Crear la identidad local del contenedor MVC
+            // Crear la identidad local del contenedor MVC
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, nameClaim ?? email),
+                new Claim(ClaimTypes.Name, nameClaim ?? correo),
                 new Claim(ClaimTypes.Role, roleClaim ?? "Staff"),
                 new Claim(ClaimTypes.NameIdentifier, idClaim ?? ""),
-                new Claim("JWToken",
-                    tokenString) // Guardamos el JWT crudo para enviarlo luego en las cabeceras de los servicios
+                new Claim("JWToken", tokenString) // Para usarlo en futuras peticiones al API
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, "TeatrosCookieAuth");
@@ -98,18 +105,38 @@ public class HomeController : Controller
 
             return RedirectToAction("Index", "Home");
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            // NOTA: Si sigue fallando, cambia temporalmente esta línea por:
+            // ViewBag.Error = $"Error: {e.Message}";
+            // Así sabrás exactamente qué línea del try está rompiendo el flujo.
             ViewBag.Error = "Error de comunicación con el servidor de autenticación.";
             return View();
         }
     }
 
+
     // 3. Endpoint para cerrar sesión
     [HttpPost]
+    [ValidateAntiForgeryToken] // 🔒 Esta anotación valida el token que pusiste en el HTML
     public async Task<IActionResult> Logout()
     {
+        // Destruye la cookie y limpia los claims del servidor y navegador
         await HttpContext.SignOutAsync("TeatrosCookieAuth");
-        return RedirectToAction("Login");
+
+        // Redirige a la vista de Login (Asegúrate de que la acción GET se llame 'Login')
+        return RedirectToAction("Login", "Home");
     }
+    
+    [HttpGet]
+    public IActionResult AccessDenied()
+    {
+        // Opción A: Mandarlo a una vista personalizada (Debes crear AccessDenied.cshtml)
+        // return View();
+
+        // Opción B: Redirección automática a su página de inicio informando el problema
+        TempData["ErrorMessage"] = "No tienes permisos para acceder a esta sección.";
+        return RedirectToAction("Index", "Home");
+    }
+
 }

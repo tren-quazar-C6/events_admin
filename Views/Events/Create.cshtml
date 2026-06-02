@@ -3,364 +3,384 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<!-- Back link -->
+<!-- Alertas -->
+@* @if (TempData["Error"] != null || ViewBag.Error != null) *@
+@* { *@
+@*     <div class="mb-6 flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl text-sm text-red-700 animate-fade-in"> *@
+@*         <i class="fa-solid fa-circle-xmark text-red-500 shrink-0"></i> *@
+@*         <span>@(TempData["Error"] ?? ViewBag.Error)</span> *@
+@*     </div> *@
+@* } *@
+
+@if (TempData["Error"] != null || ViewBag.Error != null)
+{
+    <div id="error-alert"
+         class="mb-6 flex items-center justify-between gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl text-sm text-red-700 transition-opacity duration-300">
+
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-circle-check text-red-500 shrink-0"></i>
+            <span>@TempData["Error"]</span>
+        </div>
+
+        <button type="button"
+                onclick="closeAlert()"
+                class="text-red-500 hover:text-red-700">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <script>
+        function closeAlert() {
+            const alert = document.getElementById('error-alert');
+            alert.classList.add('opacity-0');
+
+            setTimeout(() => {
+                alert.remove();
+            }, 300);
+        }
+    </script>
+}
+@* @if (TempData["Warning"] != null) *@
+@* { *@
+@*     <div class="mb-6 flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl text-sm text-amber-700 animate-fade-in"> *@
+@*         <i class="fa-solid fa-triangle-exclamation text-amber-500 shrink-0"></i> *@
+@*         <span>@TempData["Warning"]</span> *@
+@*     </div> *@
+@* } *@
+@if (TempData["Warning"] != null)
+{
+    <div id="warning-alert"
+         class="mb-6 flex items-center justify-between gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl text-sm text-amber-700 transition-opacity duration-300">
+
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-circle-check text-amber-500 shrink-0"></i>
+            <span>@TempData["Warning"]</span>
+        </div>
+
+        <button type="button"
+                onclick="closeAlert()"
+                class="text-amber-500 hover:text-amber-700">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <script>
+        function closeAlert() {
+            const alert = document.getElementById('warning-alert');
+            alert.classList.add('opacity-0');
+
+            setTimeout(() => {
+                alert.remove();
+            }, 300);
+        }
+    </script>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div id="success-alert"
+         class="mb-6 flex items-center justify-between gap-3 p-4 bg-green-50 border border-green-200 rounded-2xl text-sm text-green-700 transition-opacity duration-300">
+
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-circle-check text-green-500 shrink-0"></i>
+            <span>@TempData["success"]</span>
+        </div>
+
+        <button type="button"
+                onclick="closeAlert()"
+                class="text-green-500 hover:text-green-700">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <script>
+        function closeAlert() {
+            const alert = document.getElementById('success-alert');
+            alert.classList.add('opacity-0');
+
+            setTimeout(() => {
+                alert.remove();
+            }, 300);
+        }
+    </script>
+}
+
+<!-- Back -->
 <div class="mb-6 animate-fade-in">
-    <a href="@Url.Action("Index","Events")"
+    <a href="@Url.Action("Index", "Events")"
        class="inline-flex items-center gap-2 text-sm text-on-surface-variant hover:text-primary transition-colors font-medium">
         <i class="fa-solid fa-arrow-left text-xs"></i> Volver a Eventos
     </a>
 </div>
 
-<form id="form-evento" method="post" enctype="multipart/form-data" action="@Url.Action("Create","Events")">
-@Html.AntiForgeryToken()
+<form id="form-evento" method="post" action="@Url.Action("Create", "Events")">
+    @Html.AntiForgeryToken()
 
-<!-- ===== ENCABEZADO ===== -->
-<div class="mb-8 animate-fade-in">
-    <h3 class="text-4xl font-extrabold text-primary tracking-tight mb-2">Detalles de la Obra</h3>
-    <p class="text-sm text-on-surface-variant max-w-xl">
-        Complete la información para publicar su próximo evento. Use el editor enriquecido para que la descripción destaque entre el público.
-    </p>
-</div>
+    <!-- ===== ENCABEZADO ===== -->
+    <div class="mb-8 animate-fade-in">
+        <h3 class="text-4xl font-extrabold text-primary tracking-tight mb-2">Detalles de la Obra</h3>
+        <p class="text-sm text-on-surface-variant max-w-xl">
+            Complete la información para publicar su próximo evento. Los eventos siempre se crean como.
+        </p>
+    </div>
 
-<!-- ===================================================
-     BLOQUE 1 — INFO BÁSICA
-     =================================================== -->
-<div class="bg-white rounded-3xl border border-black/5 shadow-sm p-6 md:p-8 mb-5 animate-slide-up" style="animation-delay:.05s">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-        <!-- Columna izquierda: título + categoría + descripción -->
-        <div class="md:col-span-2 space-y-5">
-
-            <!-- Fila título + categoría -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="form-label">Título del Evento <span class="text-red-400">*</span></label>
-                    <input type="text" name="nombre_evento"
-                           placeholder="Ej. El Fantasma de la Ópera"
-                           class="form-input" required />
-                </div>
-                <div>
-                    <label class="form-label">Categoría <span class="text-red-400">*</span></label>
-                    <div class="relative">
-                        <select name="id_tipo_evento" class="form-input appearance-none pr-9" required>
-                            <option value="" disabled selected>Drama</option>
-                            <option value="1">Concierto</option>
-                            <option value="2">Obra de Teatro</option>
-                            <option value="3">Danza / Ballet</option>
-                            <option value="4">Musical</option>
-                            <option value="5">Ópera</option>
-                            <option value="6">Comedia / Stand-Up</option>
-                            <option value="7">Conferencia</option>
-                            <option value="8">Otro</option>
-                        </select>
-                        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xs pointer-events-none"></i>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Descripción con mini toolbar -->
-            <div>
-                <label class="form-label">Descripción</label>
-                <div id="editor-wrapper" class="rounded-2xl border border-black/10 overflow-hidden transition-all focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/40">
-                    <!-- Toolbar -->
-                    <div class="flex items-center gap-0.5 px-3 py-2 bg-surface border-b border-black/5">
-                        <button type="button" onclick="fmt('bold')"
-                                class="toolbar-btn font-bold">B</button>
-                        <button type="button" onclick="fmt('italic')"
-                                class="toolbar-btn italic">I</button>
-                        <button type="button" onclick="fmt('insertUnorderedList')"
-                                class="toolbar-btn"><i class="fa-solid fa-list-ul text-xs"></i></button>
-                        <div class="w-px h-4 bg-black/10 mx-1"></div>
-                        <button type="button" onclick="document.getElementById('editor').innerHTML=''"
-                                class="toolbar-btn"><i class="fa-solid fa-eraser text-xs"></i></button>
-                    </div>
-                    <!-- Área editable -->
-                    <div id="editor" contenteditable="true"
-                         class="min-h-[130px] px-4 py-3 text-sm text-on-surface bg-white focus:outline-none relative"
-                         data-ph="Escriba aquí la descripción de la obra..."></div>
-                </div>
-                <input type="hidden" name="descripcion" id="desc-hidden" />
-            </div>
-        </div>
-
-        <!-- Columna derecha: imagen de portada -->
-        <div>
-            <label class="form-label">Imagen de Portada</label>
-            <div id="drop-zone"
-                 onclick="document.getElementById('img-input').click()"
-                 class="relative w-full aspect-[3/4] rounded-2xl border-2 border-dashed border-primary/30
-                        bg-primary-light/10 flex flex-col items-center justify-center cursor-pointer
-                        hover:bg-primary-light/30 hover:border-primary/50 transition-all overflow-hidden group">
-                <img id="img-preview" src="" alt="" class="absolute inset-0 w-full h-full object-cover hidden" />
-                <div id="img-placeholder" class="flex flex-col items-center gap-3 px-4 text-center pointer-events-none">
-                    <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-all">
-                        <i class="fa-solid fa-camera-plus text-primary text-2xl"></i>
+    <!-- ===== BLOQUE 1: INFO BÁSICA ===== -->
+    <div class="bg-white rounded-3xl border border-black/5 shadow-sm p-6 md:p-8 mb-5 animate-slide-up"
+         style="animation-delay:.05s">
+        <div class="space-y-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Título + Categoría -->
+                <div class="grid grid-cols-1 sm:grid-cols-1 gap-4">
+                    <div>
+                        <label class="form-label">Título del Evento <span class="text-red-400">*</span></label>
+                        <input type="text" name="nombre_evento"
+                               placeholder="Ej. El Fantasma de la Ópera"
+                               class="form-input" required/>
                     </div>
                     <div>
-                        <p class="text-sm font-bold text-primary">Subir Póster</p>
-                        <p class="text-[11px] text-on-surface-variant mt-0.5">Recomendado: 1200 × 1600 px</p>
-                        <p class="text-[11px] text-on-surface-variant">JPG · PNG · WEBP · Máx 5MB</p>
+                        <label class="form-label">Categoría <span class="text-red-400">*</span></label>
+                        <div class="relative">
+                            <select name="id_tipo_evento" class="form-input appearance-none pr-9" required>
+                                <option value="" disabled selected>Elige una opción</option>
+                                <option value="1">Concierto</option>
+                                <option value="2">Obra de Teatro</option>
+                                <option value="3">Danza</option>
+                                <option value="4">Conferencia</option>
+                                <option value="5">Comedia</option>
+                                <option value="6">Otro</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xs pointer-events-none"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label">Ruta imagen <span class="text-red-400">*</span></label>
+                        <input type="text" name="nombre_evento"
+                               placeholder="Ej. El Fantasma de la Ópera"
+                               class="form-input" required/>
                     </div>
                 </div>
-                <button type="button" id="img-remove"
-                        onclick="removeImg(event)"
-                        class="hidden absolute top-2 right-2 w-7 h-7 bg-white/90 rounded-lg items-center justify-center text-red-500 hover:bg-white shadow-sm z-10 flex">
-                    <i class="fa-solid fa-xmark text-xs"></i>
-                </button>
-            </div>
-            <input type="file" id="img-input" name="imagen_portada"
-                   accept="image/jpeg,image/png,image/webp" class="hidden"
-                   onchange="previewImg(this)" />
-        </div>
 
-    </div>
-</div>
-
-<!-- ===================================================
-     BLOQUE 2 — FECHA Y HORA  +  PRECIOS (lado a lado)
-     =================================================== -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-
-    <!-- Fecha y Hora -->
-    <div class="bg-white rounded-3xl border border-black/5 shadow-sm p-6 animate-slide-up" style="animation-delay:.1s">
-        <div class="flex items-center gap-3 mb-5">
-            <div class="w-9 h-9 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-sm">
-                <i class="fa-regular fa-calendar"></i>
-            </div>
-            <h4 class="font-bold text-on-surface">Fecha y Hora</h4>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="form-label">Fecha <span class="text-red-400">*</span></label>
-                <input type="date" name="fecha_evento" class="form-input" required />
-            </div>
-            <div>
-                <label class="form-label">Hora de Inicio <span class="text-red-400">*</span></label>
-                <input type="time" name="hora_evento" class="form-input" required />
-            </div>
-            <div>
-                <label class="form-label">Inicio Ventas <span class="text-red-400">*</span></label>
-                <input type="datetime-local" name="fecha_inicio_ventas" class="form-input" required />
-            </div>
-            <div>
-                <label class="form-label">Cierre Ventas <span class="text-red-400">*</span></label>
-                <input type="datetime-local" name="fecha_fin_ventas" class="form-input" required />
-            </div>
-        </div>
-    </div>
-
-    <!-- Precios de Tickets -->
-    <div class="bg-white rounded-3xl border border-black/5 shadow-sm p-6 animate-slide-up" style="animation-delay:.12s">
-        <div class="flex items-center gap-3 mb-5">
-            <div class="w-9 h-9 bg-emerald-50 text-primary rounded-xl flex items-center justify-center text-sm">
-                <i class="fa-solid fa-ticket"></i>
-            </div>
-            <h4 class="font-bold text-on-surface">Precios de Tickets</h4>
-        </div>
-
-        <!-- Precio base -->
-        <div class="mb-4">
-            <div class="flex items-center gap-2 px-4 py-3 bg-surface rounded-2xl border border-black/8">
-                <span class="text-on-surface-variant text-sm font-bold">$</span>
-                <input type="number" name="precio_base" placeholder="0.00" step="0.01" min="0"
-                       class="flex-1 bg-transparent text-sm text-on-surface focus:outline-none placeholder:text-on-surface-variant/40" />
-                <span class="text-xs font-bold text-on-surface-variant bg-black/5 px-2 py-0.5 rounded-lg">Base</span>
-            </div>
-        </div>
-
-        <!-- Tags tipo de entrada -->
-        <div class="flex flex-wrap gap-2 mb-5">
-            @foreach (var tag in new[] { "Adultos", "Estudiantes", "Senior", "Niños", "VIP" })
-            {
-                <button type="button" onclick="toggleTag(this)"
-                        class="tag-btn px-3 py-1 rounded-full text-xs font-semibold border border-black/10
-                               text-on-surface-variant hover:border-primary hover:text-primary transition-all">
-                    @tag
-                </button>
-            }
-        </div>
-
-        <!-- Capacidad total -->
-        <div>
-            <label class="form-label">Capacidad Total <span class="text-red-400">*</span></label>
-            <input type="number" name="capacidad_total" placeholder="Ej. 500" min="1"
-                   class="form-input" required />
-        </div>
-
-        <!-- Toggle publicar -->
-        <label class="flex items-center gap-3 mt-4 cursor-pointer p-3 rounded-2xl hover:bg-surface transition-all">
-            <div class="relative shrink-0">
-                <input type="checkbox" name="publicado" id="chk-pub" class="sr-only peer" checked />
-                <div class="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-primary transition-colors duration-300"></div>
-                <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-300 peer-checked:translate-x-5"></div>
-            </div>
-            <div>
-                <p class="text-sm font-semibold text-on-surface leading-none">Publicar evento</p>
-                <p class="text-[11px] text-on-surface-variant mt-0.5">Visible en la cartelera pública</p>
-            </div>
-        </label>
-    </div>
-
-</div>
-
-<!-- ===================================================
-     BLOQUE 3 — CONFIGURACIÓN DE BUTACAS
-     =================================================== -->
-<div class="bg-white rounded-3xl border border-black/5 shadow-sm p-6 md:p-8 mb-8 animate-slide-up" style="animation-delay:.15s">
-
-    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
-        <div class="flex items-start gap-3">
-            <div class="w-9 h-9 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center text-sm shrink-0 mt-0.5">
-                <i class="fa-solid fa-chair"></i>
-            </div>
-            <div>
-                <h4 class="font-bold text-on-surface">Configuración de Butacas</h4>
-                <p class="text-xs text-on-surface-variant mt-0.5">Seleccione una plantilla de sala predefinida o cree una personalizada.</p>
-            </div>
-        </div>
-        <button type="button"
-                class="shrink-0 px-4 py-2 rounded-xl border border-black/10 text-xs font-semibold text-on-surface-variant
-                       hover:border-primary hover:text-primary transition-all whitespace-nowrap">
-            Ver Editor Completo <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-1"></i>
-        </button>
-    </div>
-
-    <!-- Plantillas de sala -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
-        <!-- Gran Teatro Central -->
-        <label class="sala-card cursor-pointer">
-            <input type="radio" name="plantilla_sala" value="gran_teatro" class="sr-only peer" checked />
-            <div class="relative p-4 rounded-2xl border-2 border-black/8 bg-surface/60 hover:border-primary/40
-                        peer-checked:border-primary peer-checked:bg-primary-light/20 transition-all group">
-                <!-- Check -->
-                <div class="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary flex items-center justify-center
-                            opacity-0 peer-checked:opacity-100 transition-all scale-75 peer-checked:scale-100"
-                     id="check-gran">
-                    <i class="fa-solid fa-check text-white text-[10px]"></i>
-                </div>
-                <!-- Vista previa butacas -->
-                <div class="mb-4 space-y-1.5 pt-1">
-                    @for (int r = 0; r < 5; r++)
-                    {
-                        <div class="flex gap-1 justify-center">
-                            @for (int s = 0; s < (r < 2 ? 7 : r < 4 ? 8 : 9); s++)
-                            {
-                                <div class="w-3 h-2.5 rounded-[3px] @(r == 0 ? "bg-primary" : "bg-gray-200 group-[.peer-checked~div]:bg-primary/30")"></div>
-                            }
+                <!-- Descripción -->
+                <div>
+                    <label class="form-label">Descripción</label>
+                    <div
+                        class="rounded-2xl border border-black/10 overflow-hidden focus-within:ring-2 focus-within:ring-primary/20">
+                        <div class="flex items-center gap-0.5 px-3 py-2 bg-surface border-b border-black/5">
+                            <button type="button" onclick="fmt('bold')" class="toolbar-btn font-bold">B</button>
+                            <button type="button" onclick="fmt('italic')" class="toolbar-btn italic">I</button>
+                            <button type="button" onclick="fmt('insertUnorderedList')" class="toolbar-btn">
+                                <i class="fa-solid fa-list-ul text-xs"></i>
+                            </button>
+                            <div class="w-px h-4 bg-black/10 mx-1"></div>
+                            <button type="button" onclick="document.getElementById('editor').innerHTML=''"
+                                    class="toolbar-btn"><i class="fa-solid fa-eraser text-xs"></i></button>
                         </div>
-                    }
-                </div>
-                <p class="text-xs font-bold text-on-surface">Gran Teatro Central</p>
-                <p class="text-[11px] text-on-surface-variant mt-0.5">450 Asientos · 3 Secciones</p>
-            </div>
-        </label>
-
-        <!-- Sala Experimental -->
-        <label class="sala-card cursor-pointer">
-            <input type="radio" name="plantilla_sala" value="sala_experimental" class="sr-only peer" />
-            <div class="relative p-4 rounded-2xl border-2 border-black/8 bg-surface/60 hover:border-primary/40
-                        peer-checked:border-primary peer-checked:bg-primary-light/20 transition-all group">
-                <div class="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary flex items-center justify-center
-                            opacity-0 peer-checked:opacity-100 transition-all scale-75 peer-checked:scale-100">
-                    <i class="fa-solid fa-check text-white text-[10px]"></i>
-                </div>
-                <div class="mb-4 space-y-1.5 pt-1">
-                    @for (int r = 0; r < 4; r++)
-                    {
-                        <div class="flex gap-1 justify-center">
-                            @for (int s = 0; s < 6; s++)
-                            {
-                                <div class="w-3 h-2.5 rounded-[3px] bg-gray-200"></div>
-                            }
-                        </div>
-                    }
-                </div>
-                <p class="text-xs font-bold text-on-surface">Sala Experimental</p>
-                <p class="text-[11px] text-on-surface-variant mt-0.5">120 Asientos · Unitaria</p>
-            </div>
-        </label>
-
-        <!-- Personalizado -->
-        <label class="sala-card cursor-pointer">
-            <input type="radio" name="plantilla_sala" value="personalizado" class="sr-only peer" />
-            <div class="relative p-4 rounded-2xl border-2 border-dashed border-black/10 bg-white hover:border-primary/40
-                        peer-checked:border-primary peer-checked:bg-primary-light/20 transition-all">
-                <div class="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary flex items-center justify-center
-                            opacity-0 peer-checked:opacity-100 transition-all scale-75 peer-checked:scale-100">
-                    <i class="fa-solid fa-check text-white text-[10px]"></i>
-                </div>
-                <div class="mb-4 pt-1 flex items-center justify-center h-[68px]">
-                    <div class="w-10 h-10 rounded-xl bg-black/5 flex items-center justify-center">
-                        <i class="fa-solid fa-plus text-on-surface-variant text-lg"></i>
+                        <div id="editor" contenteditable="true"
+                             class="min-h-[165px] px-4 py-3 text-sm text-on-surface bg-white focus:outline-none"
+                             data-ph="Escriba aquí la descripción de la obra..."></div>
                     </div>
+                    <input type="hidden" name="descripcion" id="desc-hidden"/>
                 </div>
-                <p class="text-xs font-bold text-on-surface">Personalizado</p>
-                <p class="text-[11px] text-on-surface-variant mt-0.5">Definir estructura manual</p>
             </div>
-        </label>
 
-    </div>
+            <!-- Fechas + Capacidad -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="form-label">Fecha del Evento <span class="text-red-400">*</span></label>
+                    <input type="datetime-local" name="fecha_evento" class="form-input" required/>
+                    <p class="text-[10px] text-on-surface-variant mt-1">Debe ser fecha futura</p>
+                </div>
+                <div>
+                    <label class="form-label">Inicio de Ventas <span class="text-red-400">*</span></label>
+                    <!--
+                        name="fecha_inicio_ventas"
+                        → se bindea a CreateEventoFormModel.fecha_inicio_ventas (string)
+                    -->
+                    <input type="datetime-local" name="fecha_inicio_ventas" class="form-input" required/>
+                </div>
+                <div>
+                    <label class="form-label">Cierre de Ventas <span class="text-red-400">*</span></label>
+                    <!--
+                        name="fecha_fin_ventas"
+                        → se bindea a CreateEventoFormModel.fecha_fin_ventas (string)
+                    -->
+                    <input type="datetime-local" name="fecha_fin_ventas" class="form-input" required/>
+                    <p class="text-[10px] text-on-surface-variant mt-1">Debe ser antes del evento</p>
+                </div>
+                <div>
+                    <label class="form-label">Capacidad Total <span class="text-red-400">*</span></label>
+                    <!--
+                        name="capacidad_total"
+                        → se bindea a CreateEventoFormModel.capacidad_total (int)
+                    -->
+                    <input type="number" name="capacidad_total" placeholder="Ej. 500" min="1"
+                           class="form-input" required/>
+                </div>
+            </div>
 
-    <!-- Zona de configuración manual (aparece si elige Personalizado) -->
-    <div id="zona-manual" class="hidden mt-6 pt-6 border-t border-black/5">
-        <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-4">Zonas y precios por zona</p>
-        <div class="space-y-3" id="zonas-lista">
-            <!-- Se generan dinámicamente -->
         </div>
-        <button type="button" onclick="agregarZona()"
-                class="mt-3 flex items-center gap-2 text-xs font-semibold text-primary hover:text-primary-dark transition-colors">
-            <i class="fa-solid fa-plus-circle"></i> Agregar zona
-        </button>
     </div>
 
-</div>
+    <!-- ===== BLOQUE 2: CONFIGURACIÓN DE BUTACAS ===== -->
+    @* <div class="bg-white rounded-3xl border border-black/5 shadow-sm p-6 md:p-8 mb-8 animate-slide-up" style="animation-delay:.1s"> *@
+    @*     <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6"> *@
+    @*         <div class="flex items-start gap-3"> *@
+    @*             <div class="w-9 h-9 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center shrink-0"> *@
+    @*                 <i class="fa-solid fa-chair text-sm"></i> *@
+    @*             </div> *@
+    @*             <div> *@
+    @*                 <h4 class="font-bold text-on-surface">Configuración de Butacas</h4> *@
+    @*                 <p class="text-xs text-on-surface-variant mt-0.5"> *@
+    @*                     Seleccione una plantilla de sala predefinida o cree una personalizada. *@
+    @*                     Las zonas se pueden configurar en detalle después de crear el evento. *@
+    @*                 </p> *@
+    @*             </div> *@
+    @*         </div> *@
+    @*         <button type="button" *@
+    @*                 class="shrink-0 px-4 py-2 rounded-xl border border-black/10 text-xs font-semibold *@
+    @*                        text-on-surface-variant hover:border-primary hover:text-primary transition-all whitespace-nowrap"> *@
+    @*             Ver Editor Completo <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-1"></i> *@
+    @*         </button> *@
+    @*     </div> *@
+    @* *@
+    @*     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4"> *@
+    @* *@
+    @*         <!-- Gran Teatro Central --> *@
+    @*         <label class="cursor-pointer"> *@
+    @*             <!-- *@
+    @*                 name="plantilla_sala" — NO se envía a la API directamente. *@
+    @*                 Es solo para UX: mostrar/ocultar el panel de zonas manual. *@
+    @*                 Las zonas reales se configuran después desde el editor. *@
+    @*             --> *@
+    @*             <input type="radio" name="plantilla_sala" value="gran_teatro" class="sr-only peer" checked /> *@
+    @*             <div class="relative p-4 rounded-2xl border-2 border-black/8 bg-surface/60 *@
+    @*                         peer-checked:border-primary peer-checked:bg-primary-light/20 transition-all"> *@
+    @*                 <div class="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary items-center justify-center *@
+    @*                             hidden peer-checked:flex"> *@
+    @*                     <i class="fa-solid fa-check text-white text-[10px]"></i> *@
+    @*                 </div> *@
+    @*                 <div class="mb-3 space-y-1.5"> *@
+    @*                     @for (int r = 0; r < 4; r++) { *@
+    @*                         <div class="flex gap-1 justify-center"> *@
+    @*                             @for (int s = 0; s < 8; s++) { *@
+    @*                                 <div class="w-3 h-2 rounded-[2px] bg-primary-light"></div> *@
+    @*                             } *@
+    @*                         </div> *@
+    @*                     } *@
+    @*                 </div> *@
+    @*                 <p class="text-xs font-bold text-on-surface">Gran Teatro Central</p> *@
+    @*                 <p class="text-[11px] text-on-surface-variant mt-0.5">450 Asientos · 3 Secciones</p> *@
+    @*             </div> *@
+    @*         </label> *@
+    @* *@
+    @*         <!-- Sala Experimental --> *@
+    @*         <label class="cursor-pointer"> *@
+    @*             <input type="radio" name="plantilla_sala" value="sala_experimental" class="sr-only peer" /> *@
+    @*             <div class="relative p-4 rounded-2xl border-2 border-black/8 bg-surface/60 *@
+    @*                         peer-checked:border-primary peer-checked:bg-primary-light/20 transition-all"> *@
+    @*                 <div class="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary items-center justify-center *@
+    @*                             hidden peer-checked:flex"> *@
+    @*                     <i class="fa-solid fa-check text-white text-[10px]"></i> *@
+    @*                 </div> *@
+    @*                 <div class="mb-3 space-y-1.5"> *@
+    @*                     @for (int r = 0; r < 4; r++) { *@
+    @*                         <div class="flex gap-1 justify-center"> *@
+    @*                             @for (int s = 0; s < 5; s++) { *@
+    @*                                 <div class="w-3 h-2 rounded-[2px] bg-gray-200"></div> *@
+    @*                             } *@
+    @*                         </div> *@
+    @*                     } *@
+    @*                 </div> *@
+    @*                 <p class="text-xs font-bold text-on-surface">Sala Experimental</p> *@
+    @*                 <p class="text-[11px] text-on-surface-variant mt-0.5">120 Asientos · Unitaria</p> *@
+    @*             </div> *@
+    @*         </label> *@
+    @* *@
+    @*         <!-- Personalizado --> *@
+    @*         <label class="cursor-pointer"> *@
+    @*             <input type="radio" name="plantilla_sala" value="personalizado" class="sr-only peer" *@
+    @*                    onchange="toggleZonaManual(this)" /> *@
+    @*             <div class="relative p-4 rounded-2xl border-2 border-dashed border-black/10 *@
+    @*                         peer-checked:border-primary peer-checked:bg-primary-light/20 transition-all"> *@
+    @*                 <div class="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary items-center justify-center *@
+    @*                             hidden peer-checked:flex"> *@
+    @*                     <i class="fa-solid fa-check text-white text-[10px]"></i> *@
+    @*                 </div> *@
+    @*                 <div class="mb-3 flex items-center justify-center h-[52px]"> *@
+    @*                     <div class="w-9 h-9 rounded-xl bg-black/5 flex items-center justify-center"> *@
+    @*                         <i class="fa-solid fa-plus text-on-surface-variant"></i> *@
+    @*                     </div> *@
+    @*                 </div> *@
+    @*                 <p class="text-xs font-bold text-on-surface">Personalizado</p> *@
+    @*                 <p class="text-[11px] text-on-surface-variant mt-0.5">Definir estructura manual</p> *@
+    @*             </div> *@
+    @*         </label> *@
+    @* *@
+    @*     </div> *@
+    @* *@
+    @*     <!-- Panel zonas manuales (solo visible si elige Personalizado) --> *@
+    @*     <div id="zona-manual" class="hidden mt-6 pt-6 border-t border-black/5"> *@
+    @*         <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">Zonas configuradas</p> *@
+    @*         <p class="text-xs text-on-surface-variant mb-4"> *@
+    @*             Nota: estas zonas son referenciales. Las zonas reales se asignan con los IDs de la BD *@
+    @*             desde el editor de evento después de crearlo. *@
+    @*         </p> *@
+    @*         <div id="zonas-lista" class="space-y-3"></div> *@
+    @*         <button type="button" onclick="agregarZona()" *@
+    @*                 class="mt-3 flex items-center gap-2 text-xs font-semibold text-primary hover:text-primary-dark transition-colors"> *@
+    @*             <i class="fa-solid fa-plus-circle"></i> Agregar zona *@
+    @*         </button> *@
+    @*     </div> *@
+    @* </div> *@
 
-<!-- ===================================================
-     ACCIONES FINALES
-     =================================================== -->
-<div class="flex items-center justify-between gap-4 animate-slide-up pb-6" style="animation-delay:.2s">
-    <!-- Descartar -->
-    <button type="button" onclick="confirmarDescartar()"
-            class="flex items-center gap-2 text-sm font-semibold text-red-500 hover:text-red-600 transition-colors px-2 py-1">
-        <i class="fa-regular fa-trash-can text-sm"></i> Descartar Cambios
-    </button>
-
-    <div class="flex gap-3">
-        <!-- Borrador -->
-        <button type="submit" name="accion" value="borrador"
-                class="px-6 py-3 rounded-2xl border border-black/15 text-on-surface text-sm font-semibold
-                       hover:bg-surface active:scale-95 transition-all">
-            Guardar Borrador
-        </button>
-        <!-- Publicar -->
-        <button type="submit" name="accion" value="publicar"
-                onclick="syncEditor()"
-                class="px-6 py-3 rounded-2xl bg-primary text-white text-sm font-semibold
+    <!-- ===== ACCIONES ===== -->
+    <div class="flex items-center justify-end gap-4 animate-slide-up pb-6" style="animation-delay:.15s">
+        @* <button type="button" onclick="confirmarDescartar()" *@
+        @*         class="flex items-center gap-2 text-sm font-semibold text-red-500 hover:text-red-600 transition-colors"> *@
+        @*     <i class="fa-regular fa-trash-can"></i> Descartar Cambios *@
+        @* </button> *@
+        <div class="flex gap-3">
+            <!--
+                name="accion" value="borrador"
+                → CreateEventoFormModel.accion = "borrador"
+                → controller crea en DRAFT y no llama a UpdateStatusAsync
+            -->
+            @*         <button type="submit" name="accion" value="borrador" *@
+            @*                 class="px-6 py-3 rounded-2xl border border-black/15 text-on-surface text-sm font-semibold *@
+            @*                        hover:bg-surface active:scale-95 transition-all"> *@
+            @*             Guardar Borrador *@
+            @*         </button> *@
+            <!--
+                name="accion" value="publicar"
+                → CreateEventoFormModel.accion = "publicar"
+                → controller crea en DRAFT y luego llama PATCH /status → PUBLISHED
+            -->
+            <button type="submit" name="accion" value="publicar"
+                    class="px-6 py-3 rounded-2xl bg-primary text-white text-sm font-semibold
                        hover:bg-primary-dark active:scale-95 transition-all shadow-md">
-            Publicar Evento
-        </button>
+                Publicar Evento
+            </button>
+        </div>
     </div>
-</div>
 
 </form>
 
-<!-- ===== MODAL DESCARTAR ===== -->
+<!-- Modal descartar -->
 <div id="modal-descartar" class="fixed inset-0 z-50 hidden items-center justify-center">
     <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="cerrarDescartar()"></div>
-    <div class="relative bg-white rounded-3xl p-8 w-full max-w-sm mx-4 shadow-2xl animate-slide-up">
+    <div class="relative bg-white rounded-3xl p-8 w-full max-w-sm mx-4 shadow-2xl">
         <div class="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <i class="fa-regular fa-trash-can text-red-500 text-2xl"></i>
         </div>
         <h3 class="text-lg font-bold text-on-surface text-center mb-2">¿Descartar cambios?</h3>
-        <p class="text-sm text-on-surface-variant text-center mb-6">Perderás toda la información ingresada en este formulario.</p>
+        <p class="text-sm text-on-surface-variant text-center mb-6">Perderás toda la información ingresada.</p>
         <div class="flex gap-3">
             <button onclick="cerrarDescartar()"
                     class="flex-1 py-2.5 rounded-2xl border border-black/10 text-on-surface-variant text-sm font-semibold hover:bg-surface transition-all">
                 Cancelar
             </button>
-            <a href="@Url.Action("Index","Events")"
-               class="flex-1 py-2.5 rounded-2xl bg-red-500 text-white text-sm font-semibold text-center hover:bg-red-600 active:scale-95 transition-all">
+            <a href="@Url.Action("Index", "Events")"
+               class="flex-1 py-2.5 rounded-2xl bg-red-500 text-white text-sm font-semibold text-center hover:bg-red-600 transition-all">
                 Sí, descartar
             </a>
         </div>
@@ -368,117 +388,127 @@
 </div>
 
 @section Scripts {
-<style>
-    .form-label  { @("display:block; font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#6b6b63; margin-bottom:.4rem;") }
-    .form-input  { @("width:100%; padding:.7rem 1rem; background:#f6f3ee; border-radius:1rem; border:1px solid rgba(0,0,0,.08); font-size:.875rem; color:#1c1c19; transition:all .2s;") }
-    .form-input:focus { outline:none; box-shadow:0 0 0 3px rgba(50,105,78,.15); border-color:rgba(50,105,78,.35); }
-    .toolbar-btn { @("width:1.75rem; height:1.75rem; display:flex; align-items:center; justify-content:center; border-radius:.5rem; font-size:.8rem; color:#6b6b63; transition:all .15s; cursor:pointer;") }
-    .toolbar-btn:hover { background:#e8e4dd; color:#1c1c19; }
-    /* Placeholder del editor */
-    #editor:empty:before { content:attr(data-ph); color:#6b6b6366; pointer-events:none; }
-    /* Checkbox peer trick sin Tailwind peer-checked en radio */
-    input[type=radio]:checked ~ div { border-color:#32694e !important; background:rgba(202,230,214,.2) !important; }
-    input[type=radio]:checked ~ div .opacity-0 { opacity:1 !important; transform:scale(1) !important; }
-</style>
-<script>
-// ── Editor ─────────────────────────────────
-function fmt(cmd) {
-    document.getElementById('editor').focus();
-    document.execCommand(cmd, false, null);
-}
-function syncEditor() {
-    document.getElementById('desc-hidden').value =
-        document.getElementById('editor').innerHTML;
-}
-document.getElementById('form-evento').addEventListener('submit', syncEditor);
+    <style>
+        .form-label {
+            display: block;
+            font-size: .65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #6b6b63;
+            margin-bottom: .4rem;
+        }
 
-// ── Preview imagen ──────────────────────────
-function previewImg(input) {
-    const file = input.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert('Imagen supera 5MB'); return; }
-    const reader = new FileReader();
-    reader.onload = e => {
-        document.getElementById('img-preview').src = e.target.result;
-        document.getElementById('img-preview').classList.remove('hidden');
-        document.getElementById('img-placeholder').classList.add('hidden');
-        document.getElementById('img-remove').classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
-}
-function removeImg(e) {
-    e.stopPropagation();
-    document.getElementById('img-preview').src = '';
-    document.getElementById('img-preview').classList.add('hidden');
-    document.getElementById('img-placeholder').classList.remove('hidden');
-    document.getElementById('img-remove').classList.add('hidden');
-    document.getElementById('img-input').value = '';
-}
-// Drag & drop
-const dz = document.getElementById('drop-zone');
-dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('border-primary','bg-primary-light/30'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('border-primary','bg-primary-light/30'));
-dz.addEventListener('drop', e => {
-    e.preventDefault();
-    dz.classList.remove('border-primary','bg-primary-light/30');
-    const inp = document.getElementById('img-input');
-    const dt = new DataTransfer();
-    dt.items.add(e.dataTransfer.files[0]);
-    inp.files = dt.files;
-    previewImg(inp);
-});
+        .form-input {
+            width: 100%;
+            padding: .7rem 1rem;
+            background: #f6f3ee;
+            border-radius: 1rem;
+            border: 1px solid rgba(0, 0, 0, .08);
+            font-size: .875rem;
+            color: #1c1c19;
+            transition: all .2s;
+        }
 
-// ── Tags tipo entrada ───────────────────────
-function toggleTag(btn) {
-    const on = btn.classList.contains('bg-primary');
-    btn.classList.toggle('bg-primary', !on);
-    btn.classList.toggle('text-white', !on);
-    btn.classList.toggle('border-primary', !on);
-    btn.classList.toggle('text-on-surface-variant', on);
-    btn.classList.toggle('border-black/10', on);
-}
+        .form-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(50, 105, 78, .15);
+            border-color: rgba(50, 105, 78, .35);
+        }
 
-// ── Plantilla sala → zona manual ────────────
-document.querySelectorAll('input[name="plantilla_sala"]').forEach(r => {
-    r.addEventListener('change', () => {
-        const manual = document.getElementById('zona-manual');
-        manual.classList.toggle('hidden', r.value !== 'personalizado');
-        if (r.value !== 'personalizado') return;
-        if (!document.getElementById('zonas-lista').children.length) agregarZona();
-    });
-});
+        .toolbar-btn {
+            width: 1.75rem;
+            height: 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: .5rem;
+            font-size: .8rem;
+            color: #6b6b63;
+            cursor: pointer;
+            transition: all .15s;
+        }
 
-let zonaIdx = 0;
-function agregarZona() {
-    const lista = document.getElementById('zonas-lista');
-    const div = document.createElement('div');
-    div.className = 'flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-2xl bg-surface/60 border border-black/5';
-    div.innerHTML = `
-        <input type="text" name="zona_nombre_${zonaIdx}" placeholder="Nombre de zona (ej. Platea VIP)"
-               class="form-input flex-1" style="min-width:140px"/>
-        <div class="relative flex-1" style="min-width:100px">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-on-surface-variant">$</span>
-            <input type="number" name="zona_precio_${zonaIdx}" placeholder="0.00" step="0.01" min="0"
-                   class="form-input pl-6" />
-        </div>
-        <input type="number" name="zona_cap_${zonaIdx}" placeholder="Capacidad" min="0"
-               class="form-input" style="max-width:110px"/>
+        .toolbar-btn:hover {
+            background: #e8e4dd;
+            color: #1c1c19;
+        }
+
+        #editor:empty:before {
+            content: attr(data-ph);
+            color: rgba(107, 107, 99, .4);
+            pointer-events: none;
+        }
+
+        input[type=radio]:checked ~ div {
+            border-color: #32694e !important;
+            background: rgba(202, 230, 214, .2) !important;
+        }
+
+        input[type=radio]:checked ~ div .hidden {
+            display: flex !important;
+        }
+    </style>
+    <script>
+        // Editor
+        function fmt(cmd) {
+            document.getElementById('editor').focus();
+            document.execCommand(cmd, false, null);
+        }
+
+        function syncEditor() {
+            document.getElementById('desc-hidden').value = document.getElementById('editor').innerHTML;
+        }
+
+        document.getElementById('form-evento').addEventListener('submit', syncEditor);
+
+        // Zona manual
+        function toggleZonaManual(radio) {
+            const panel = document.getElementById('zona-manual');
+            if (radio.value === 'personalizado') {
+                panel.classList.remove('hidden');
+                if (!document.getElementById('zonas-lista').children.length) agregarZona();
+            }
+            
+
+        }
+
+        document.querySelectorAll('input[name="plantilla_sala"]').forEach(r => {
+            r.addEventListener('change', () => {
+                if (r.value !== 'personalizado')
+                    document.getElementById('zona-manual').classList.add('hidden');
+                else toggleZonaManual(r);
+            });
+        });
+
+        let zi = 0;
+
+        function agregarZona() {
+            const d = document.createElement('div');
+            d.className = 'flex gap-3 items-center p-3 rounded-2xl bg-surface/60 border border-black/5';
+            d.innerHTML = `
+        <input type="text" placeholder="Nombre zona" class="form-input flex-1 text-xs py-2"/>
+        <div class="relative w-28"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-on-surface-variant">$</span>
+        <input type="number" placeholder="Precio" class="form-input pl-6 text-xs py-2"/></div>
+        <input type="number" placeholder="Cap." class="form-input w-20 text-xs py-2"/>
         <button type="button" onclick="this.closest('div.flex').remove()"
-                class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-red-50 text-on-surface-variant hover:text-red-500 transition-all shrink-0">
-            <i class="fa-regular fa-trash-can text-sm"></i>
+                class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-on-surface-variant hover:text-red-500 transition-all">
+            <i class="fa-regular fa-trash-can text-xs"></i>
         </button>`;
-    lista.appendChild(div);
-    zonaIdx++;
-}
+            document.getElementById('zonas-lista').appendChild(d);
+            zi++;
+        }
 
-// ── Modal descartar ─────────────────────────
-function confirmarDescartar() {
-    const m = document.getElementById('modal-descartar');
-    m.classList.remove('hidden'); m.classList.add('flex');
-}
-function cerrarDescartar() {
-    const m = document.getElementById('modal-descartar');
-    m.classList.add('hidden'); m.classList.remove('flex');
-}
-</script>
+        // Modal descartar
+        function confirmarDescartar() {
+            const m = document.getElementById('modal-descartar');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+
+        function cerrarDescartar() {
+            document.getElementById('modal-descartar').classList.add('hidden');
+            document.getElementById('modal-descartar').classList.remove('flex');
+        }
+    </script>
 }

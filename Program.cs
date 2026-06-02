@@ -50,6 +50,7 @@ var host = Host.CreateDefaultBuilder(args) // <-- [CORREGIDO] Inicializa la cons
                     {
                         options.LoginPath = "/Home/Login";
                         options.AccessDeniedPath = "/Home/AccessDenied";
+                        options.Cookie.Name = "QuasarAdminSession"; // Nombre físico de la cookie en el navegador
                         options.ExpireTimeSpan = TimeSpan.FromHours(8);
                     });
 
@@ -57,6 +58,7 @@ var host = Host.CreateDefaultBuilder(args) // <-- [CORREGIDO] Inicializa la cons
                 services.AddScoped<EventBusinessRulesService>();
                 services.AddScoped<EmployeePermissionsService>();
                 services.AddScoped<NotificationTriggerService>();
+                services.AddScoped<EventService>();
                 services.AddHttpClient<MetricsApiClient>();
                 services.AddControllersWithViews();
 
