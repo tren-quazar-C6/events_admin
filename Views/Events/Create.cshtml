@@ -19,7 +19,7 @@
 
         <div class="flex items-center gap-3">
             <i class="fa-solid fa-circle-check text-red-500 shrink-0"></i>
-            <span>@TempData["Error"]</span>
+            <span>@ViewBag.Error</span>
         </div>
 
         <button type="button"
@@ -154,8 +154,8 @@
                     </div>
                     <div>
                         <label class="form-label">Ruta imagen <span class="text-red-400">*</span></label>
-                        <input type="text" name="nombre_evento"
-                               placeholder="Ej. El Fantasma de la Ópera"
+                        <input type="text" name="ruta_url"
+                               placeholder="Ej. Ingrese la ruta de la img"
                                class="form-input" required/>
                     </div>
                 </div>

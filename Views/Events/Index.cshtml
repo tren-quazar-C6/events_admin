@@ -44,9 +44,9 @@
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-4">
 
-                            <img src="@(string.IsNullOrEmpty(e.imagen_principal)
+                            <img src="@(string.IsNullOrEmpty(e.ruta_url)
                                           ? "/images/no-image.png"
-                                          : e.imagen_principal)"
+                                          : e.ruta_url)"
                                  class="w-12 h-12 rounded-2xl object-cover"/>
 
                             <div>
@@ -88,7 +88,11 @@
                     <!-- Acciones -->
                     <td class="px-6 py-4 text-right">
                         <a href="@Url.Action("Detail", "Events", new { id = e.id_evento })">
-                            Ver
+                            <i class="fa-solid fa-circle-info"></i>
+                            Detalles
+                        </a>
+                        <a href="@Url.Action("Detail", "Events", new { id = e.id_evento })">
+                            Zonas
                         </a>
                     </td>
 

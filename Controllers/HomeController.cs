@@ -56,7 +56,7 @@ public class HomeController : Controller
             var content = new StringContent(JsonSerializer.Serialize(loginData), Encoding.UTF8, "application/json");
 
             // URL real de tu API en C#
-            var response = await client.PostAsync("https://service.quasar.andrescortes.dev/api/auth/login", content);
+            var response = await client.PostAsync("http://localhost:5114/api/auth/login", content);
 
             if (!response.IsSuccessStatusCode)
             {

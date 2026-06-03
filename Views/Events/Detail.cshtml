@@ -1,0 +1,301 @@
+@model events_admin.Models.AdminEventoDetalleDto
+
+@{
+    ViewData["Title"] = "Detalle del Evento";
+
+    var pctVendidos  = Model.capacidad_total > 0 ? (int)Math.Round((double)Model.vendidos  / Model.capacidad_total * 100) : 0;
+    var pctReservados = Model.capacidad_total > 0 ? (int)Math.Round((double)Model.reservados / Model.capacidad_total * 100) : 0;
+    var pctDisponibles = 100 - pctVendidos - pctReservados;
+
+    string OcupacionBadge(int pct) => pct >= 80
+        ? "bg-emerald-100 text-emerald-800"
+        : pct >= 50
+            ? "bg-amber-100 text-amber-800"
+            : "bg-blue-100 text-blue-800";
+
+    string StatusBadge(string s) => s?.ToLower() switch {
+        "activo"    => "bg-emerald-100 text-emerald-700 border border-emerald-200",
+        "agotado"   => "bg-red-100 text-red-700 border border-red-200",
+        "cancelado" => "bg-gray-100 text-gray-500 border border-gray-200",
+        _           => "bg-blue-100 text-blue-700 border border-blue-200"
+    };
+}
+
+<!-- ===== ENCABEZADO ===== -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 animate-fade-in">
+    <div>
+        <a href="@Url.Action("Index","Events")"
+           class="inline-flex items-center gap-1.5 text-xs font-semibold text-on-surface-variant hover:text-primary transition-colors mb-3">
+            <i class="fa-solid fa-arrow-left text-[10px]"></i> Volver a Eventos
+        </a>
+        <div class="flex items-center gap-3 flex-wrap">
+            <h3 class="text-3xl font-extrabold text-on-surface tracking-tight">@Model.nombre_evento</h3>
+            <span class="text-xs font-bold px-3 py-1 rounded-full @StatusBadge(Model.status)">@Model.status</span>
+        </div>
+        <p class="text-sm text-on-surface-variant mt-1">@Model.tipo_evento</p>
+    </div>
+    <div class="flex items-center gap-3">
+        <a href="@Url.Action("Edit","Events", new { id = Model.id_evento })"
+           class="border border-black/10 text-on-surface-variant hover:border-primary hover:text-primary px-5 py-2.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2">
+            <i class="fa-solid fa-pen-to-square"></i> Editar
+        </a>
+        <a href="@Url.Action("ConfigureZones","Events", new { id = Model.id_evento })"
+           class="bg-primary text-white px-5 py-2.5 rounded-full font-semibold flex items-center gap-2 hover:bg-primary-dark active:scale-95 transition-all shadow-md text-sm whitespace-nowrap">
+            <i class="fa-solid fa-layer-group"></i>
+            @(Model.zonas == null || !Model.zonas.Any() ? "Configurar Zonas" : "Administrar Zonas")
+        </a>
+    </div>
+</section>
+
+<!-- ===== KPI CARDS ===== -->
+<section class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+
+    <!-- Capacidad total -->
+    <div class="bg-white rounded-3xl p-5 border border-black/5 shadow-sm flex flex-col justify-between animate-slide-up" style="animation-delay:.05s">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Capacidad Total</span>
+            <div class="w-9 h-9 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-chair text-sm"></i>
+            </div>
+        </div>
+        <h4 class="text-3xl font-black text-on-surface">@Model.capacidad_total.ToString("N0")</h4>
+        <p class="text-[11px] text-on-surface-variant mt-1">Asientos configurados</p>
+    </div>
+
+    <!-- Vendidos -->
+    <div class="bg-white rounded-3xl p-5 border border-black/5 shadow-sm flex flex-col justify-between animate-slide-up" style="animation-delay:.1s">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Vendidos</span>
+            <div class="w-9 h-9 bg-emerald-50 text-primary rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-ticket text-sm"></i>
+            </div>
+        </div>
+        <h4 class="text-3xl font-black text-on-surface">@Model.vendidos.ToString("N0")</h4>
+        <p class="text-[11px] text-emerald-600 font-semibold mt-1">@pctVendidos% del aforo</p>
+    </div>
+
+    <!-- Reservados -->
+    <div class="bg-white rounded-3xl p-5 border border-black/5 shadow-sm flex flex-col justify-between animate-slide-up" style="animation-delay:.15s">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Reservados</span>
+            <div class="w-9 h-9 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-clock text-sm"></i>
+            </div>
+        </div>
+        <h4 class="text-3xl font-black text-on-surface">@Model.reservados.ToString("N0")</h4>
+        <p class="text-[11px] text-amber-600 font-semibold mt-1">@pctReservados% pendiente</p>
+    </div>
+
+    <!-- Disponibles -->
+    <div class="bg-white rounded-3xl p-5 border border-black/5 shadow-sm flex flex-col justify-between animate-slide-up" style="animation-delay:.2s">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Disponibles</span>
+            <div class="w-9 h-9 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-circle-check text-sm"></i>
+            </div>
+        </div>
+        <h4 class="text-3xl font-black text-on-surface">@Model.disponibles.ToString("N0")</h4>
+        <p class="text-[11px] text-blue-600 font-semibold mt-1">@pctDisponibles% libre</p>
+    </div>
+
+</section>
+
+<!-- ===== BARRA DE OCUPACIÓN ===== -->
+<div class="bg-white rounded-3xl p-5 border border-black/5 shadow-sm mb-8 animate-slide-up" style="animation-delay:.22s">
+    <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Distribución del Aforo</span>
+        <span class="text-xs font-bold @OcupacionBadge(pctVendidos) px-2.5 py-0.5 rounded-full">@pctVendidos% vendido</span>
+    </div>
+    <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden flex">
+        <div class="bg-primary h-full rounded-l-full transition-all" style="width:@pctVendidos%"></div>
+        <div class="bg-amber-400 h-full transition-all" style="width:@pctReservados%"></div>
+        <div class="bg-blue-200 h-full transition-all" style="width:@pctDisponibles%"></div>
+    </div>
+    <div class="flex items-center gap-5 mt-2.5 text-[11px] text-on-surface-variant">
+        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-primary inline-block"></span> Vendidos</span>
+        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-amber-400 inline-block"></span> Reservados</span>
+        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-blue-200 inline-block"></span> Disponibles</span>
+    </div>
+</div>
+
+<!-- ===== CONTENIDO PRINCIPAL ===== -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+    <!-- INFORMACIÓN GENERAL -->
+    <div class="lg:col-span-2 bg-white rounded-3xl p-6 border border-black/5 shadow-sm animate-slide-up" style="animation-delay:.25s">
+        <h4 class="font-bold text-lg text-on-surface mb-6">Información General</h4>
+
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
+
+            <div>
+                <dt class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Tipo de Evento</dt>
+                <dd class="text-sm font-semibold text-on-surface">@Model.tipo_evento</dd>
+            </div>
+
+            <div>
+                <dt class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Estado</dt>
+                <dd>
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-full @StatusBadge(Model.status)">@Model.status</span>
+                </dd>
+            </div>
+
+            <div>
+                <dt class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">
+                    <i class="fa-regular fa-calendar mr-1"></i> Fecha del Evento
+                </dt>
+                <dd class="text-sm font-semibold text-on-surface">@Model.fecha_evento.ToString("dd 'de' MMMM yyyy · HH:mm")</dd>
+            </div>
+
+            <div class="sm:col-span-2 border-t border-black/5 pt-5">
+                <dt class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-3">Ventana de Ventas</dt>
+                <dd class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex-1 bg-surface/40 border border-black/5 rounded-2xl p-4">
+                        <p class="text-[10px] text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Inicio</p>
+                        <p class="text-sm font-bold text-on-surface">@Model.fecha_inicio_ventas.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
+                    <div class="flex items-center text-on-surface-variant">
+                        <i class="fa-solid fa-arrow-right-long text-xs hidden sm:block"></i>
+                        <i class="fa-solid fa-arrow-down-long text-xs sm:hidden"></i>
+                    </div>
+                    <div class="flex-1 bg-surface/40 border border-black/5 rounded-2xl p-4">
+                        <p class="text-[10px] text-on-surface-variant font-semibold uppercase tracking-wider mb-1">Cierre</p>
+                        <p class="text-sm font-bold text-on-surface">@Model.fecha_fin_ventas.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
+                </dd>
+            </div>
+
+        </dl>
+
+        @if (!string.IsNullOrWhiteSpace(Model.descripcion))
+        {
+            <div class="border-t border-black/5 mt-6 pt-6">
+                <p class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Descripción</p>
+                <p class="text-sm text-on-surface-variant leading-relaxed">@Model.descripcion</p>
+            </div>
+        }
+    </div>
+
+    <!-- SIDEBAR: acciones rápidas -->
+    <div class="flex flex-col gap-5">
+
+        <!-- Próxima función countdown-style -->
+        <div class="bg-primary rounded-3xl p-6 text-white animate-slide-up" style="animation-delay:.3s">
+            <p class="text-xs font-bold uppercase tracking-wider text-primary-light/80 mb-2">Fecha del Evento</p>
+            <p class="text-2xl font-black leading-tight">@Model.fecha_evento.ToString("dd MMM yyyy")</p>
+            <p class="text-sm text-primary-light/80 mt-1">@Model.fecha_evento.ToString("HH:mm") hrs</p>
+            <div class="mt-4 pt-4 border-t border-white/10 flex items-center gap-2 text-xs text-primary-light/70">
+                <i class="fa-regular fa-clock"></i>
+                @{
+                    var diff = Model.fecha_evento - DateTime.Now;
+                    if (diff.TotalSeconds > 0)
+                    {
+                        <span>En @((int)diff.TotalDays) días · @diff.Hours h @diff.Minutes min</span>
+                    }
+                    else
+                    {
+                        <span>Evento finalizado</span>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="bg-white rounded-3xl p-6 border border-black/5 shadow-sm animate-slide-up" style="animation-delay:.35s">
+            <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-4">Acciones Rápidas</p>
+            <div class="flex flex-col gap-2">
+                <a href="@Url.Action("ConfigureZones","Events", new { id = Model.id_evento })"
+                   class="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface/60 border border-black/5 hover:border-primary/20 transition-all group">
+                    <div class="w-8 h-8 bg-primary-light text-primary rounded-xl flex items-center justify-center text-xs group-hover:bg-primary group-hover:text-white transition-all">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-on-surface">Administrar zonas</span>
+                </a>
+                <a href="@Url.Action("Edit","Events", new { id = Model.id_evento })"
+                   class="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface/60 border border-black/5 hover:border-primary/20 transition-all group">
+                    <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xs group-hover:bg-blue-600 group-hover:text-white transition-all">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-on-surface">Editar evento</span>
+                </a>
+                <a href="@Url.Action("Index","Ventas", new { eventoId = Model.id_evento })"
+                   class="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface/60 border border-black/5 hover:border-primary/20 transition-all group">
+                    <div class="w-8 h-8 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xs group-hover:bg-amber-500 group-hover:text-white transition-all">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                    <span class="text-sm font-semibold text-on-surface">Ver ventas</span>
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+</section>
+
+<!-- ===== ZONAS ===== -->
+<section class="bg-white rounded-3xl p-6 border border-black/5 shadow-sm animate-slide-up" style="animation-delay:.4s">
+
+    <div class="flex items-center justify-between mb-6">
+        <h4 class="font-bold text-lg text-on-surface">Zonas Configuradas</h4>
+        <a href="@Url.Action("ConfigureZones","Events", new { id = Model.id_evento })"
+           class="bg-primary text-white px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-2 hover:bg-primary-dark transition-all shadow-sm">
+            <i class="fa-solid @(Model.zonas == null || !Model.zonas.Any() ? "fa-plus" : "fa-pen")"></i>
+            @(Model.zonas == null || !Model.zonas.Any() ? "Configurar zonas" : "Administrar zonas")
+        </a>
+    </div>
+
+    @if (Model.zonas == null || !Model.zonas.Any())
+    {
+        <div class="flex flex-col items-center justify-center py-16 text-center">
+            <div class="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mb-4">
+                <i class="fa-solid fa-layer-group text-2xl text-amber-400"></i>
+            </div>
+            <p class="text-sm font-bold text-on-surface mb-1">Sin zonas configuradas</p>
+            <p class="text-xs text-on-surface-variant max-w-xs">Este evento aún no tiene zonas. Configúralas para comenzar a vender boletas.</p>
+            <a href="@Url.Action("ConfigureZones","Events", new { id = Model.id_evento })"
+               class="mt-5 bg-primary text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-primary-dark transition-all shadow-md">
+                Configurar ahora
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-black/5 text-xs text-on-surface-variant uppercase tracking-wider">
+                        <th class="pb-3 font-semibold">Zona</th>
+                        <th class="pb-3 font-semibold">Capacidad</th>
+                        <th class="pb-3 font-semibold">Precio</th>
+                        <th class="pb-3 font-semibold">Cargo Servicio</th>
+                        <th class="pb-3 font-semibold text-right">Total por Boleta</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-black/5 text-sm">
+                    @foreach (var zona in Model.zonas)
+                    {
+                        <tr class="hover:bg-surface/40 transition-colors">
+                            <td class="py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-primary-light text-primary rounded-xl flex items-center justify-center text-xs font-bold">
+                                        @zona.nombre_zona.Substring(0, 1).ToUpper()
+                                    </div>
+                                    <span class="font-semibold text-on-surface">@zona.nombre_zona</span>
+                                </div>
+                            </td>
+                            <td class="py-4">
+                                <span class="text-on-surface-variant font-medium">@zona.capacidad.ToString("N0")</span>
+                                <span class="text-xs text-on-surface-variant"> asientos</span>
+                            </td>
+                            <td class="py-4 font-semibold text-on-surface">@zona.precio.ToString("C0")</td>
+                            <td class="py-4 text-on-surface-variant">@zona.cargo_servicio.ToString("C0")</td>
+                            <td class="py-4 text-right">
+                                <span class="font-black text-primary">@((zona.precio + zona.cargo_servicio).ToString("C0"))</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+</section>

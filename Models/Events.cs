@@ -10,8 +10,8 @@ public record AdminEventoResumenDto(
     DateTime fecha_fin_ventas,
     int capacidad_total,
     string tipo_evento,
-    string? imagen_principal,
-    string status,           // "DRAFT" | "PUBLISHED" | "CANCELLED"
+    string? ruta_url,
+    string status, // "DRAFT" | "PUBLISHED" | "CANCELLED"
     int total_zonas
 );
 
@@ -29,7 +29,7 @@ public record AdminEventoDetalleDto(
     string status,
     DateTime? fecha_cancelacion,
     string? motivo_cancelacion,
-    List<ImagenEventoDto> imagenes,
+    string? ruta_url,
     List<EventoZonaDto> zonas,
     int disponibles,
     int reservados,
@@ -61,6 +61,7 @@ public class CreateEventoApiRequest
     public DateTime fecha_inicio_ventas { get; set; }
     public DateTime fecha_fin_ventas { get; set; }
     public int capacidad_total { get; set; }
+    public string ruta_url { get; set; }
     public List<ZonaEventoRequest>? zonas { get; set; }
 }
 
@@ -81,15 +82,15 @@ public class CreateEventoFormModel
     public string? descripcion { get; set; }
 
     // Fecha + hora separadas del form
-    public string? fecha_evento { get; set; }          // "2025-09-15"
-    public string? hora_evento  { get; set; }          // "20:00"
+    public string? fecha_evento { get; set; } // "2025-09-15"
+    public string? hora_evento { get; set; } // "20:00"
 
-    public string? fecha_inicio_ventas { get; set; }   // "2025-07-01T09:00"
-    public string? fecha_fin_ventas    { get; set; }   // "2025-09-14T23:59"
+    public string? fecha_inicio_ventas { get; set; } // "2025-07-01T09:00"
+    public string? fecha_fin_ventas { get; set; } // "2025-09-14T23:59"
 
     public int capacidad_total { get; set; }
-    public string? accion { get; set; }                // "borrador" | "publicar"
+    public string? accion { get; set; } // "borrador" | "publicar"
 
     // Imagen de portada (opcional — se maneja por separado si hay upload service)
-    public IFormFile? imagen_portada { get; set; }
+    public string ruta_url { get; set; }
 }

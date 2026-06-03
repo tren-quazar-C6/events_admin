@@ -56,10 +56,10 @@ public class EventsController : Controller
         }
 
         // Pasar filtros activos a la vista para mantener el estado del buscador
-        ViewBag.Busqueda       = busqueda;
-        ViewBag.StatusActivo   = status;
-        ViewBag.TipoActivo     = id_tipo_evento;
-        
+        ViewBag.Busqueda = busqueda;
+        ViewBag.StatusActivo = status;
+        ViewBag.TipoActivo = id_tipo_evento;
+
         const int pageSize = 5;
 
         var totalRegistros = eventos.Count;
@@ -75,8 +75,6 @@ public class EventsController : Controller
         ViewBag.TotalRecords = totalRegistros;
 
         return View(eventosPagina);
-        
-        return View(eventos);
     }
 
     // ── GET /Events/Create ────────────────────────────────────────────────────
@@ -105,7 +103,8 @@ public class EventsController : Controller
 
         // ── 1. Construir DateTime combinando fecha + hora ──────────────────
 
-        if (!TryParseEventoFechas(form, out var fechaEvento, out var fechaInicioVentas, out var fechaFinVentas, out var parseError))
+        if (!TryParseEventoFechas(form, out var fechaEvento, out var fechaInicioVentas, out var fechaFinVentas,
+                out var parseError))
         {
             ViewBag.Error = parseError;
             return View(form);
@@ -115,14 +114,15 @@ public class EventsController : Controller
 
         var apiRequest = new CreateEventoApiRequest
         {
-            id_tipo_evento      = form.id_tipo_evento,
-            creado_por_staff    = GetStaffId(),
-            nombre_evento       = form.nombre_evento.Trim(),
-            descripcion         = string.IsNullOrWhiteSpace(form.descripcion) ? null : form.descripcion,
-            fecha_evento        = fechaEvento,
+            id_tipo_evento = form.id_tipo_evento,
+            creado_por_staff = GetStaffId(),
+            nombre_evento = form.nombre_evento.Trim(),
+            descripcion = string.IsNullOrWhiteSpace(form.descripcion) ? null : form.descripcion,
+            ruta_url = form.ruta_url,
+            fecha_evento = fechaEvento,
             fecha_inicio_ventas = fechaInicioVentas,
-            fecha_fin_ventas    = fechaFinVentas,
-            capacidad_total     = form.capacidad_total,
+            fecha_fin_ventas = fechaFinVentas,
+            capacidad_total = form.capacidad_total,
             // zonas: se pueden mapear aquí si el formulario las envía.
             // Por ahora el form no envía zonas estructuradas (usa plantilla_sala),
             // así que se deja null para crear en DRAFT y luego asignar zonas.
@@ -135,28 +135,16 @@ public class EventsController : Controller
 
         if (!ok)
         {
-            ViewBag.Error = error ?? "Ocurrió un error al crear el evento.";
+            ViewBag.Error = error;
             return View(form);
         }
 
-        // ── 4. Si acción = "publicar", cambiar status después de crear ─────
-
-        // if (form.accion == "publicar" && idEvento.HasValue)
-        // {
-        //     var (pubOk, pubError) = await _eventosApi.UpdateStatusAsync(
-        //         token, idEvento.Value, "PUBLISHED", ct: ct);
-        //
-        //     if (!pubOk)
-        //     {
-        //         // Se creó pero no se publicó — ir al detalle con advertencia
-        //         TempData["Warning"] = $"El evento se creó como borrador pero no se pudo publicar: {pubError}";
-        //         return RedirectToAction(nameof(Create));
-        //     }
-        // }
-
         TempData["Success"] = "¡Evento publicado correctamente!";
 
-        return RedirectToAction(nameof(Create));
+        return RedirectToAction(
+            nameof(Detail),
+            new { id = idEvento }
+        );
     }
 
     // ── GET /Events/Detail/{id} ───────────────────────────────────────────────
@@ -213,7 +201,7 @@ public class EventsController : Controller
         //     error = "La fecha o hora del evento no es válida.";
         //     return false;
         // }
-        
+
         if (!DateTime.TryParse(form.fecha_evento, out fechaEvento))
         {
             error = "La fecha o hora del evento no es válida.";

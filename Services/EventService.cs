@@ -16,7 +16,7 @@ public class EventService
 
     // Ruta base de la API, ej. "https://service.quasar.andrescortes.dev/"
     // private string BaseUrl => _config["ApiSettings:BaseUrl"]!.TrimEnd('/');
-    private string BaseUrl => _config?["ApiSettings:BaseUrl"] ?? "https://service.quasar.andrescortes.dev/";
+    private string BaseUrl => _config?["ApiSettings:BaseUrl"] ?? "https://service.quasar.andrescortes.dev";
 
 
     public EventService(IHttpClientFactory clientFactory, IConfiguration config)
@@ -54,12 +54,12 @@ public class EventService
     {
         var query = BuildQuery(new Dictionary<string, string?>
         {
-            ["busqueda"]       = busqueda,
-            ["status"]         = status,
+            ["busqueda"] = busqueda,
+            ["status"] = status,
             ["id_tipo_evento"] = id_tipo_evento?.ToString()
         });
 
-        var client   = CreateAuthorizedClient(jwtToken);
+        var client = CreateAuthorizedClient(jwtToken);
         var response = await client.GetAsync($"{BaseUrl}/api/admin/eventos{query}", ct);
 
         if (!response.IsSuccessStatusCode) return null;
@@ -79,7 +79,7 @@ public class EventService
     public async Task<AdminEventoDetalleDto?> GetEventoAsync(
         string jwtToken, int id, CancellationToken ct = default)
     {
-        var client   = CreateAuthorizedClient(jwtToken);
+        var client = CreateAuthorizedClient(jwtToken);
         var response = await client.GetAsync($"{BaseUrl}/api/admin/eventos/{id}", ct);
 
         if (!response.IsSuccessStatusCode) return null;
@@ -105,21 +105,45 @@ public class EventService
         CreateEventoApiRequest request,
         CancellationToken ct = default)
     {
-        var client   = CreateAuthorizedClient(jwtToken);
+        var client = CreateAuthorizedClient(jwtToken);
         var response = await client.PostAsync(
             $"{BaseUrl}/api/admin/eventos", JsonBody(request), ct);
 
         var json = await response.Content.ReadAsStringAsync(ct);
 
+        Console.WriteLine("STATUS: " + response.StatusCode);
+        Console.WriteLine("JSON:");
+        Console.WriteLine(json);
+
         try
         {
-            using var doc  = JsonDocument.Parse(json);
-            var root        = doc.RootElement;
-            var success     = root.GetProperty("success").GetBoolean();
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            var success = root.GetProperty("success").GetBoolean();
 
             if (!success)
             {
-                var msg = root.TryGetProperty("message", out var m) ? m.GetString() : "Error al crear el evento";
+                string? msg = null;
+
+                if (root.TryGetProperty("message", out var m))
+                {
+                    msg = m.GetString();
+                }
+
+                if (string.IsNullOrWhiteSpace(msg)
+                    && root.TryGetProperty("errors", out var errors)
+                    && errors.ValueKind == JsonValueKind.Array)
+                {
+                    msg = string.Join(
+                        Environment.NewLine,
+                        errors.EnumerateArray()
+                            .Select(x => x.GetString())
+                            .Where(x => !string.IsNullOrWhiteSpace(x))
+                    );
+                }
+
+                msg ??= "Error al crear el evento";
+
                 return (false, msg, null);
             }
 
@@ -142,8 +166,8 @@ public class EventService
     public async Task<(bool ok, string? error)> UpdateStatusAsync(
         string jwtToken, int id, string status, string? motivo = null, CancellationToken ct = default)
     {
-        var client   = CreateAuthorizedClient(jwtToken);
-        var payload  = new { status, motivo_cancelacion = motivo };
+        var client = CreateAuthorizedClient(jwtToken);
+        var payload = new { status, motivo_cancelacion = motivo };
         var response = await client.PatchAsync(
             $"{BaseUrl}/api/admin/eventos/{id}/status", JsonBody(payload), ct);
 
