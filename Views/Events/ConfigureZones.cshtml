@@ -70,7 +70,7 @@
                         <th class="p-4 font-semibold">Activa</th>
                         <th class="p-4 font-semibold">Precio</th>
                         <th class="p-4 font-semibold">Cargo servicio</th>
-                        <th class="p-4 font-semibold">Capacidad</th>
+                        <th class="p-4 font-semibold">Asientos físicos</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-black/5">
@@ -120,11 +120,13 @@
                                    class="form-input" />
                         </td>
                         <td class="p-4">
-                            <input type="number"
-                                   min="0"
-                                   name="zonas[@i].capacidad"
-                                   value="@zona.capacidad"
-                                   class="form-input" />
+                            <input type="text"
+                                   value="@zona.capacidad_fisica"
+                                   readonly
+                                   class="form-input form-input-readonly" />
+                            <p class="mt-2 text-[11px] text-on-surface-variant">
+                                Capacidad fija tomada de los asientos activos de la zona.
+                            </p>
                         </td>
                     </tr>
                 }
@@ -161,5 +163,11 @@
         outline: none;
         box-shadow: 0 0 0 3px rgba(50, 105, 78, .15);
         border-color: rgba(50, 105, 78, .35);
+    }
+
+    .form-input-readonly {
+        background: #eee9e1;
+        color: #5b564f;
+        cursor: not-allowed;
     }
 </style>

@@ -204,6 +204,10 @@ public class EventsController : Controller
             .Select(z => new ZonaCatalogoDto(z.id_zona, z.nombre_zona, z.color_hex))
             .ToListAsync(ct);
 
+        var capacidadFisicaPorZona = await GetCapacidadesFisicasPorZonaAsync(
+            zonasCatalogo.Select(z => z.id_zona),
+            ct);
+
         var zonasEvento = evento.zonas?
             .Select(z => new EventoZonaFormItem
             {
@@ -213,7 +217,10 @@ public class EventsController : Controller
                 activo = z.activo,
                 precio = z.precio,
                 cargo_servicio = z.cargo_servicio,
-                capacidad = z.capacidad
+                capacidad = z.capacidad,
+                capacidad_fisica = capacidadFisicaPorZona.TryGetValue(z.id_zona, out var capacidadFisica)
+                    ? capacidadFisica
+                    : 0
             })
             .ToList() ?? new List<EventoZonaFormItem>();
 
@@ -231,7 +238,10 @@ public class EventsController : Controller
                 activo = true,
                 precio = 0,
                 cargo_servicio = 0,
-                capacidad = 0
+                capacidad = 0,
+                capacidad_fisica = capacidadFisicaPorZona.TryGetValue(zona.id_zona, out var capacidadFisica)
+                    ? capacidadFisica
+                    : 0
             });
         }
 
@@ -260,28 +270,45 @@ public class EventsController : Controller
         if (string.IsNullOrEmpty(token))
             return RedirectToAction("Login", "Home");
 
-        var payload = form.zonas
-            .Where(z => z.activo && z.capacidad > 0)
+        var zonasFormulario = form.zonas ?? new List<EventoZonaFormItem>();
+        var capacidadFisicaPorZona = await GetCapacidadesFisicasPorZonaAsync(
+            zonasFormulario.Select(z => z.id_zona),
+            ct);
+
+        foreach (var zona in zonasFormulario)
+        {
+            zona.capacidad_fisica = capacidadFisicaPorZona.TryGetValue(zona.id_zona, out var capacidadFisica)
+                ? capacidadFisica
+                : 0;
+        }
+
+        var zonasActivasSinCapacidad = zonasFormulario
+            .Where(z => z.activo && z.capacidad_fisica <= 0)
+            .Select(z => z.nombre_zona)
+            .ToList();
+
+        if (zonasActivasSinCapacidad.Any())
+        {
+            ViewBag.Error = $"Estas zonas activas no tienen asientos físicos disponibles: {string.Join(", ", zonasActivasSinCapacidad)}";
+            await RehydrateZonesFormAsync(form, ct);
+            return View(form);
+        }
+
+        var payload = zonasFormulario
+            .Where(z => z.activo)
             .Select(z => new ZonaEventoRequest
             {
                 id_zona = z.id_zona,
                 precio = z.precio,
                 cargo_servicio = z.cargo_servicio,
-                capacidad = z.capacidad
+                capacidad = z.capacidad_fisica
             })
             .ToList();
 
         if (payload.Count == 0)
         {
-            ViewBag.Error = "Debes activar al menos una zona con capacidad mayor a cero.";
-            var zonasCatalogo = await _db.ZONAs
-                .AsNoTracking()
-                .Where(z => z.activo == true)
-                .OrderBy(z => z.nombre_zona)
-                .Select(z => new ZonaCatalogoDto(z.id_zona, z.nombre_zona, z.color_hex))
-                .ToListAsync(ct);
-
-            form.catalogo_zonas = zonasCatalogo;
+            ViewBag.Error = "Debes activar al menos una zona con asientos físicos disponibles.";
+            await RehydrateZonesFormAsync(form, ct);
             return View(form);
         }
 
@@ -289,14 +316,7 @@ public class EventsController : Controller
         if (capacidadAsignada > form.capacidad_total)
         {
             ViewBag.Error = $"La suma de capacidades ({capacidadAsignada}) excede la capacidad total del evento ({form.capacidad_total}).";
-            var zonasCatalogo = await _db.ZONAs
-                .AsNoTracking()
-                .Where(z => z.activo == true)
-                .OrderBy(z => z.nombre_zona)
-                .Select(z => new ZonaCatalogoDto(z.id_zona, z.nombre_zona, z.color_hex))
-                .ToListAsync(ct);
-
-            form.catalogo_zonas = zonasCatalogo;
+            await RehydrateZonesFormAsync(form, ct);
             return View(form);
         }
 
@@ -304,19 +324,51 @@ public class EventsController : Controller
         if (!ok)
         {
             ViewBag.Error = error;
-            var zonasCatalogo = await _db.ZONAs
-                .AsNoTracking()
-                .Where(z => z.activo == true)
-                .OrderBy(z => z.nombre_zona)
-                .Select(z => new ZonaCatalogoDto(z.id_zona, z.nombre_zona, z.color_hex))
-                .ToListAsync(ct);
-
-            form.catalogo_zonas = zonasCatalogo;
+            await RehydrateZonesFormAsync(form, ct);
             return View(form);
         }
 
         TempData["Success"] = "Zonas del evento actualizadas correctamente.";
         return RedirectToAction(nameof(Detail), new { id });
+    }
+
+    private async Task RehydrateZonesFormAsync(EventoZonasFormModel form, CancellationToken ct)
+    {
+        var zonasCatalogo = await _db.ZONAs
+            .AsNoTracking()
+            .Where(z => z.activo == true)
+            .OrderBy(z => z.nombre_zona)
+            .Select(z => new ZonaCatalogoDto(z.id_zona, z.nombre_zona, z.color_hex))
+            .ToListAsync(ct);
+
+        var capacidadFisicaPorZona = await GetCapacidadesFisicasPorZonaAsync(
+            zonasCatalogo.Select(z => z.id_zona),
+            ct);
+
+        foreach (var zona in form.zonas ?? Enumerable.Empty<EventoZonaFormItem>())
+        {
+            zona.capacidad_fisica = capacidadFisicaPorZona.TryGetValue(zona.id_zona, out var capacidadFisica)
+                ? capacidadFisica
+                : 0;
+        }
+
+        form.catalogo_zonas = zonasCatalogo;
+    }
+
+    private async Task<Dictionary<int, int>> GetCapacidadesFisicasPorZonaAsync(
+        IEnumerable<int> zonaIds,
+        CancellationToken ct)
+    {
+        var ids = zonaIds.Distinct().ToList();
+        if (ids.Count == 0)
+            return new Dictionary<int, int>();
+
+        return await _db.ASIENTOs
+            .AsNoTracking()
+            .Where(a => a.IsActive == true && ids.Contains(a.ZoneId))
+            .GroupBy(a => a.ZoneId)
+            .Select(g => new { ZoneId = g.Key, Total = g.Count() })
+            .ToDictionaryAsync(x => x.ZoneId, x => x.Total, ct);
     }
 
     [HttpPost]

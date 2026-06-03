@@ -104,7 +104,7 @@ public class EventoZonasFormModel
     public string tipo_evento { get; set; } = "";
     public DateTime fecha_evento { get; set; }
     public int capacidad_total { get; set; }
-    public int capacidad_asignada => zonas.Where(z => z.activo).Sum(z => z.capacidad);
+    public int capacidad_asignada => zonas.Where(z => z.activo).Sum(z => z.capacidad_fisica);
     public int capacidad_restante => Math.Max(0, capacidad_total - capacidad_asignada);
     public List<EventoZonaFormItem> zonas { get; set; } = new();
     public List<ZonaCatalogoDto> catalogo_zonas { get; set; } = new();
@@ -119,6 +119,7 @@ public class EventoZonaFormItem
     public decimal precio { get; set; }
     public decimal? cargo_servicio { get; set; }
     public int capacidad { get; set; }
+    public int capacidad_fisica { get; set; }
 }
 
 public record ZonaCatalogoDto(
