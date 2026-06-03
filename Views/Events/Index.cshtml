@@ -87,6 +87,10 @@
 
                     <!-- Acciones -->
                     <td class="px-6 py-4 text-right">
+                        <a href="@Url.Action("Edit", "Events", new { id = e.id_evento })">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            Editar
+                        </a>
                         <a href="@Url.Action("Detail", "Events", new { id = e.id_evento })">
                             <i class="fa-solid fa-circle-info"></i>
                             Detalles

@@ -1,8 +1,11 @@
+using System.Globalization;
 using System.Security.Claims;
+using events_admin.Data;
 using events_admin.Models;
 using events_admin.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace events_admin.Controllers;
 
@@ -10,32 +13,23 @@ namespace events_admin.Controllers;
 public class EventsController : Controller
 {
     private readonly EventService _eventosApi;
+    private readonly QuasarDbContext _db;
 
-    public EventsController(EventService eventosApi)
+    public EventsController(EventService eventosApi, QuasarDbContext db)
     {
         _eventosApi = eventosApi;
+        _db = db;
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    private string? GetJwtToken() => User.FindFirstValue("JWToken");
 
-    /// <summary>
-    /// Lee el JWT que guardamos como claim "JWToken" al hacer login.
-    /// Si no existe redirige al login.
-    /// </summary>
-    private string? GetJwtToken() =>
-        User.FindFirstValue("JWToken");
-
-    /// <summary>
-    /// Lee el id_staff del claim "nameidentifier" (sub del JWT).
-    /// </summary>
     private int GetStaffId()
     {
         var raw = User.FindFirstValue(ClaimTypes.NameIdentifier);
         return int.TryParse(raw, out var id) ? id : 0;
     }
 
-    // ── GET /Events ───────────────────────────────────────────────────────────
-
+    [HttpGet]
     public async Task<IActionResult> Index(
         string? busqueda,
         string? status,
@@ -55,13 +49,11 @@ public class EventsController : Controller
             eventos = new List<AdminEventoResumenDto>();
         }
 
-        // Pasar filtros activos a la vista para mantener el estado del buscador
         ViewBag.Busqueda = busqueda;
         ViewBag.StatusActivo = status;
         ViewBag.TipoActivo = id_tipo_evento;
 
         const int pageSize = 5;
-
         var totalRegistros = eventos.Count;
         var totalPaginas = (int)Math.Ceiling(totalRegistros / (double)pageSize);
 
@@ -77,8 +69,6 @@ public class EventsController : Controller
         return View(eventosPagina);
     }
 
-    // ── GET /Events/Create ────────────────────────────────────────────────────
-
     [HttpGet]
     public IActionResult Create()
     {
@@ -86,10 +76,8 @@ public class EventsController : Controller
         if (string.IsNullOrEmpty(token))
             return RedirectToAction("Login", "Home");
 
-        return View(); // Usa la vista que ya tienes (Create.cshtml)
+        return View(new CreateEventoFormModel());
     }
-
-    // ── POST /Events/Create ───────────────────────────────────────────────────
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -101,36 +89,14 @@ public class EventsController : Controller
         if (string.IsNullOrEmpty(token))
             return RedirectToAction("Login", "Home");
 
-        // ── 1. Construir DateTime combinando fecha + hora ──────────────────
-
-        if (!TryParseEventoFechas(form, out var fechaEvento, out var fechaInicioVentas, out var fechaFinVentas,
-                out var parseError))
+        if (!TryValidateEventoFechas(form, out var fechaEvento, out var fechaInicioVentas, out var fechaFinVentas,
+                out var parseErrors))
         {
-            ViewBag.Error = parseError;
+            ViewBag.Error = string.Join("\n", parseErrors);
             return View(form);
         }
 
-        // ── 2. Armar el request para la API ──────────────────────────────
-
-        var apiRequest = new CreateEventoApiRequest
-        {
-            id_tipo_evento = form.id_tipo_evento,
-            creado_por_staff = GetStaffId(),
-            nombre_evento = form.nombre_evento.Trim(),
-            descripcion = string.IsNullOrWhiteSpace(form.descripcion) ? null : form.descripcion,
-            ruta_url = form.ruta_url,
-            fecha_evento = fechaEvento,
-            fecha_inicio_ventas = fechaInicioVentas,
-            fecha_fin_ventas = fechaFinVentas,
-            capacidad_total = form.capacidad_total,
-            // zonas: se pueden mapear aquí si el formulario las envía.
-            // Por ahora el form no envía zonas estructuradas (usa plantilla_sala),
-            // así que se deja null para crear en DRAFT y luego asignar zonas.
-            zonas = null
-        };
-
-        // ── 3. Llamar a la API ─────────────────────────────────────────────
-
+        var apiRequest = BuildApiRequest(form, fechaEvento, fechaInicioVentas, fechaFinVentas, GetStaffId());
         var (ok, error, idEvento) = await _eventosApi.CreateEventoAsync(token, apiRequest, ct);
 
         if (!ok)
@@ -139,15 +105,56 @@ public class EventsController : Controller
             return View(form);
         }
 
-        TempData["Success"] = "¡Evento publicado correctamente!";
-
-        return RedirectToAction(
-            nameof(Detail),
-            new { id = idEvento }
-        );
+        TempData["Success"] = "Evento publicado correctamente.";
+        return RedirectToAction(nameof(Detail), new { id = idEvento });
     }
 
-    // ── GET /Events/Detail/{id} ───────────────────────────────────────────────
+    [HttpGet]
+    public async Task<IActionResult> Edit(int id, CancellationToken ct = default)
+    {
+        var token = GetJwtToken();
+        if (string.IsNullOrEmpty(token))
+            return RedirectToAction("Login", "Home");
+
+        var evento = await _eventosApi.GetEventoAsync(token, id, ct);
+        if (evento is null)
+            return NotFound();
+
+        return View(MapToFormModel(evento));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(
+        int id,
+        [FromForm] CreateEventoFormModel form,
+        CancellationToken ct = default)
+    {
+        var token = GetJwtToken();
+        if (string.IsNullOrEmpty(token))
+            return RedirectToAction("Login", "Home");
+
+        if (!TryValidateEventoFechas(form, out var fechaEvento, out var fechaInicioVentas, out var fechaFinVentas,
+                out var parseErrors))
+        {
+            ViewBag.Error = string.Join("\n", parseErrors);
+            form.id_evento = id;
+            return View(form);
+        }
+
+        var apiRequest = BuildApiRequest(form, fechaEvento, fechaInicioVentas, fechaFinVentas, GetStaffId());
+        var (ok, error) = await _eventosApi.UpdateEventoAsync(token, id, apiRequest, ct);
+
+        if (!ok)
+        {
+            ViewBag.Error = error;
+            form.id_evento = id;
+            return View(form);
+        }
+
+        TempData["Success"] = "Evento actualizado correctamente.";
+        return RedirectToAction(nameof(Detail), new { id });
+    }
 
     [HttpGet]
     public async Task<IActionResult> Detail(int id, CancellationToken ct = default)
@@ -163,7 +170,138 @@ public class EventsController : Controller
         return View(evento);
     }
 
-    // ── POST /Events/ChangeStatus ─────────────────────────────────────────────
+    [HttpGet]
+    public async Task<IActionResult> ConfigureZones(int id, CancellationToken ct = default)
+    {
+        var token = GetJwtToken();
+        if (string.IsNullOrEmpty(token))
+            return RedirectToAction("Login", "Home");
+
+        var evento = await _eventosApi.GetEventoAsync(token, id, ct);
+        if (evento is null)
+            return NotFound();
+
+        var zonasCatalogo = await _db.ZONAs
+            .AsNoTracking()
+            .Where(z => z.activo == true)
+            .OrderBy(z => z.nombre_zona)
+            .Select(z => new ZonaCatalogoDto(z.id_zona, z.nombre_zona, z.color_hex))
+            .ToListAsync(ct);
+
+        var zonasEvento = evento.zonas?
+            .Select(z => new EventoZonaFormItem
+            {
+                id_zona = z.id_zona,
+                nombre_zona = z.nombre_zona,
+                color_hex = z.color_hex,
+                activo = z.activo,
+                precio = z.precio,
+                cargo_servicio = z.cargo_servicio,
+                capacidad = z.capacidad
+            })
+            .ToList() ?? new List<EventoZonaFormItem>();
+
+        var zonasExistentesIds = zonasEvento.Select(z => z.id_zona).ToHashSet();
+        foreach (var zona in zonasCatalogo)
+        {
+            if (zonasExistentesIds.Contains(zona.id_zona))
+                continue;
+
+            zonasEvento.Add(new EventoZonaFormItem
+            {
+                id_zona = zona.id_zona,
+                nombre_zona = zona.nombre_zona,
+                color_hex = zona.color_hex,
+                activo = true,
+                precio = 0,
+                cargo_servicio = 0,
+                capacidad = 0
+            });
+        }
+
+        var model = new EventoZonasFormModel
+        {
+            id_evento = evento.id_evento,
+            nombre_evento = evento.nombre_evento,
+            tipo_evento = evento.tipo_evento,
+            fecha_evento = evento.fecha_evento,
+            capacidad_total = evento.capacidad_total,
+            zonas = zonasEvento.OrderBy(z => z.nombre_zona).ToList(),
+            catalogo_zonas = zonasCatalogo
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfigureZones(
+        int id,
+        [FromForm] EventoZonasFormModel form,
+        CancellationToken ct = default)
+    {
+        var token = GetJwtToken();
+        if (string.IsNullOrEmpty(token))
+            return RedirectToAction("Login", "Home");
+
+        var payload = form.zonas
+            .Where(z => z.activo && z.capacidad > 0)
+            .Select(z => new ZonaEventoRequest
+            {
+                id_zona = z.id_zona,
+                precio = z.precio,
+                cargo_servicio = z.cargo_servicio,
+                capacidad = z.capacidad
+            })
+            .ToList();
+
+        if (payload.Count == 0)
+        {
+            ViewBag.Error = "Debes activar al menos una zona con capacidad mayor a cero.";
+            var zonasCatalogo = await _db.ZONAs
+                .AsNoTracking()
+                .Where(z => z.activo == true)
+                .OrderBy(z => z.nombre_zona)
+                .Select(z => new ZonaCatalogoDto(z.id_zona, z.nombre_zona, z.color_hex))
+                .ToListAsync(ct);
+
+            form.catalogo_zonas = zonasCatalogo;
+            return View(form);
+        }
+
+        var capacidadAsignada = payload.Sum(z => z.capacidad);
+        if (capacidadAsignada > form.capacidad_total)
+        {
+            ViewBag.Error = $"La suma de capacidades ({capacidadAsignada}) excede la capacidad total del evento ({form.capacidad_total}).";
+            var zonasCatalogo = await _db.ZONAs
+                .AsNoTracking()
+                .Where(z => z.activo == true)
+                .OrderBy(z => z.nombre_zona)
+                .Select(z => new ZonaCatalogoDto(z.id_zona, z.nombre_zona, z.color_hex))
+                .ToListAsync(ct);
+
+            form.catalogo_zonas = zonasCatalogo;
+            return View(form);
+        }
+
+        var (ok, error) = await _eventosApi.UpdateEventoZonasAsync(token, id, payload, ct);
+        if (!ok)
+        {
+            ViewBag.Error = error;
+            var zonasCatalogo = await _db.ZONAs
+                .AsNoTracking()
+                .Where(z => z.activo == true)
+                .OrderBy(z => z.nombre_zona)
+                .Select(z => new ZonaCatalogoDto(z.id_zona, z.nombre_zona, z.color_hex))
+                .ToListAsync(ct);
+
+            form.catalogo_zonas = zonasCatalogo;
+            return View(form);
+        }
+
+        TempData["Success"] = "Zonas del evento actualizadas correctamente.";
+        return RedirectToAction(nameof(Detail), new { id });
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -183,43 +321,97 @@ public class EventsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // ── Helpers privados ──────────────────────────────────────────────────────
+    private static CreateEventoApiRequest BuildApiRequest(
+        CreateEventoFormModel form,
+        DateTime fechaEvento,
+        DateTime fechaInicioVentas,
+        DateTime fechaFinVentas,
+        int staffId)
+    {
+        return new CreateEventoApiRequest
+        {
+            id_tipo_evento = form.id_tipo_evento,
+            creado_por_staff = staffId,
+            nombre_evento = form.nombre_evento.Trim(),
+            descripcion = string.IsNullOrWhiteSpace(form.descripcion) ? null : form.descripcion,
+            ruta_url = form.ruta_url?.Trim() ?? string.Empty,
+            fecha_evento = fechaEvento,
+            fecha_inicio_ventas = fechaInicioVentas,
+            fecha_fin_ventas = fechaFinVentas,
+            capacidad_total = form.capacidad_total,
+            zonas = null
+        };
+    }
 
-    private static bool TryParseEventoFechas(
+    private CreateEventoFormModel MapToFormModel(AdminEventoDetalleDto evento)
+    {
+        return new CreateEventoFormModel
+        {
+            id_evento = evento.id_evento,
+            nombre_evento = evento.nombre_evento,
+            id_tipo_evento = evento.id_tipo_evento,
+            descripcion = evento.descripcion,
+            fecha_evento = evento.fecha_evento.ToString("yyyy-MM-ddTHH:mm"),
+            fecha_inicio_ventas = evento.fecha_inicio_ventas.ToString("yyyy-MM-ddTHH:mm"),
+            fecha_fin_ventas = evento.fecha_fin_ventas.ToString("yyyy-MM-ddTHH:mm"),
+            capacidad_total = evento.capacidad_total,
+            ruta_url = evento.ruta_url ?? string.Empty
+        };
+    }
+
+    private static bool TryValidateEventoFechas(
         CreateEventoFormModel form,
         out DateTime fechaEvento,
         out DateTime fechaInicioVentas,
         out DateTime fechaFinVentas,
-        out string? error)
+        out List<string> errors)
     {
         fechaEvento = fechaInicioVentas = fechaFinVentas = default;
-        error = null;
+        errors = new List<string>();
 
-        // fecha_evento viene como "yyyy-MM-dd" + hora_evento "HH:mm"
-        // if (!DateTime.TryParse($"{form.fecha_evento}T{form.hora_evento ?? "00:00"}", out fechaEvento))
-        // {
-        //     error = "La fecha o hora del evento no es válida.";
-        //     return false;
-        // }
+        var formats = new[] { "yyyy-MM-ddTHH:mm", "yyyy-MM-ddTHH:mm:ss" };
+        var culture = CultureInfo.InvariantCulture;
 
-        if (!DateTime.TryParse(form.fecha_evento, out fechaEvento))
+        if (!DateTime.TryParseExact(form.fecha_evento, formats, culture, DateTimeStyles.None, out fechaEvento))
         {
-            error = "La fecha o hora del evento no es válida.";
+            errors.Add("La fecha del evento no es válida.");
+        }
+
+        if (!DateTime.TryParseExact(form.fecha_inicio_ventas, formats, culture, DateTimeStyles.None, out fechaInicioVentas))
+        {
+            errors.Add("La fecha de inicio de ventas no es válida.");
+        }
+
+        if (!DateTime.TryParseExact(form.fecha_fin_ventas, formats, culture, DateTimeStyles.None, out fechaFinVentas))
+        {
+            errors.Add("La fecha de cierre de ventas no es válida.");
+        }
+
+        if (errors.Count > 0)
+        {
             return false;
         }
 
-        if (!DateTime.TryParse(form.fecha_inicio_ventas, out fechaInicioVentas))
+        if (fechaEvento <= DateTime.Now)
         {
-            error = "La fecha de inicio de ventas no es válida.";
-            return false;
+            errors.Add("La fecha del evento debe ser futura.");
         }
 
-        if (!DateTime.TryParse(form.fecha_fin_ventas, out fechaFinVentas))
+        if (fechaInicioVentas >= fechaFinVentas)
         {
-            error = "La fecha de cierre de ventas no es válida.";
-            return false;
+            errors.Add("La fecha de inicio de ventas debe ser anterior al cierre de ventas.");
         }
 
-        return true;
+        if (fechaFinVentas >= fechaEvento)
+        {
+            errors.Add("La fecha de cierre de ventas debe ser anterior a la fecha del evento.");
+        }
+
+        if (fechaInicioVentas >= fechaEvento)
+        {
+            errors.Add("La fecha de inicio de ventas debe ser anterior a la fecha del evento.");
+        }
+
+        return errors.Count == 0;
     }
 }

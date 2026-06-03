@@ -1,10 +1,10 @@
 @model CreateEventoFormModel
 @{
-    ViewData["Title"] = "Crear Nuevo Evento";
-    ViewData["FormAction"] = "Create";
-    ViewData["SubmitText"] = "Publicar Evento";
-    ViewData["Heading"] = "Detalles del Evento";
-    ViewData["Description"] = "Complete la información para publicar su próximo evento.";
+    ViewData["Title"] = "Editar Evento";
+    ViewData["FormAction"] = "Edit";
+    ViewData["SubmitText"] = "Guardar Cambios";
+    ViewData["Heading"] = "Editar Evento";
+    ViewData["Description"] = "Ajuste la información del evento y guarde los cambios.";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -14,16 +14,6 @@
         <div class="flex items-center gap-3">
             <i class="fa-solid fa-circle-xmark text-red-500 shrink-0"></i>
             <span class="whitespace-pre-line">@(TempData["Error"] ?? ViewBag.Error)</span>
-        </div>
-    </div>
-}
-
-@if (TempData["Warning"] != null)
-{
-    <div class="mb-6 flex items-center justify-between gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl text-sm text-amber-700">
-        <div class="flex items-center gap-3">
-            <i class="fa-solid fa-triangle-exclamation text-amber-500 shrink-0"></i>
-            <span class="whitespace-pre-line">@TempData["Warning"]</span>
         </div>
     </div>
 }
@@ -39,9 +29,9 @@
 }
 
 <div class="mb-6 animate-fade-in">
-    <a href="@Url.Action("Index", "Events")"
+    <a href="@Url.Action("Detail", "Events", new { id = Model.id_evento ?? 0 })"
        class="inline-flex items-center gap-2 text-sm text-on-surface-variant hover:text-primary transition-colors font-medium">
-        <i class="fa-solid fa-arrow-left text-xs"></i> Volver a Eventos
+        <i class="fa-solid fa-arrow-left text-xs"></i> Volver al detalle
     </a>
 </div>
 

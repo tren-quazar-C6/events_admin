@@ -61,7 +61,7 @@ public class CreateEventoApiRequest
     public DateTime fecha_inicio_ventas { get; set; }
     public DateTime fecha_fin_ventas { get; set; }
     public int capacidad_total { get; set; }
-    public string ruta_url { get; set; }
+    public string ruta_url { get; set; } = "";
     public List<ZonaEventoRequest>? zonas { get; set; }
 }
 
@@ -77,6 +77,7 @@ public class ZonaEventoRequest
 
 public class CreateEventoFormModel
 {
+    public int? id_evento { get; set; }
     public string nombre_evento { get; set; } = "";
     public int id_tipo_evento { get; set; }
     public string? descripcion { get; set; }
@@ -92,5 +93,35 @@ public class CreateEventoFormModel
     public string? accion { get; set; } // "borrador" | "publicar"
 
     // Imagen de portada (opcional — se maneja por separado si hay upload service)
-    public string ruta_url { get; set; }
+    public string ruta_url { get; set; } = "";
 }
+
+public class EventoZonasFormModel
+{
+    public int id_evento { get; set; }
+    public string nombre_evento { get; set; } = "";
+    public string tipo_evento { get; set; } = "";
+    public DateTime fecha_evento { get; set; }
+    public int capacidad_total { get; set; }
+    public int capacidad_asignada => zonas.Where(z => z.activo).Sum(z => z.capacidad);
+    public int capacidad_restante => Math.Max(0, capacidad_total - capacidad_asignada);
+    public List<EventoZonaFormItem> zonas { get; set; } = new();
+    public List<ZonaCatalogoDto> catalogo_zonas { get; set; } = new();
+}
+
+public class EventoZonaFormItem
+{
+    public int id_zona { get; set; }
+    public string nombre_zona { get; set; } = "";
+    public string? color_hex { get; set; }
+    public bool activo { get; set; }
+    public decimal precio { get; set; }
+    public decimal? cargo_servicio { get; set; }
+    public int capacidad { get; set; }
+}
+
+public record ZonaCatalogoDto(
+    int id_zona,
+    string nombre_zona,
+    string? color_hex
+);
