@@ -1,0 +1,292 @@
+/* ── RESET / BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body.te-body {
+    font-family: 'Outfit', system-ui, sans-serif;
+    background: #0f1117;
+    color: #e2e4eb;
+    display: flex;
+    min-height: 100vh;
+    font-size: 14px;
+}
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+.te-sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: #181c27;
+    border-right: 1px solid rgba(255,255,255,.06);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 14px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+}
+
+/* Brand */
+.te-sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 4px 24px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    margin-bottom: 20px;
+}
+.te-brand-icon {
+    width: 36px; height: 36px;
+    background: #26c76e;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: #fff;
+}
+.te-brand-name { font-weight: 700; font-size: 13.5px; color: #fff; line-height: 1.2; }
+.te-brand-sub  { font-size: 10px; color: #6b7280; margin-top: 1px; }
+
+/* Nav */
+.te-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.te-nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    color: #8b93a7;
+    font-weight: 500;
+    font-size: 13px;
+    text-decoration: none;
+    transition: background .15s, color .15s;
+}
+.te-nav-item:hover { background: rgba(255,255,255,.05); color: #e2e4eb; }
+.te-nav-item--active {
+    background: rgba(38,199,110,.12);
+    color: #26c76e;
+}
+.te-nav-icon { width: 16px; text-align: center; font-size: 14px; }
+
+/* Sidebar footer */
+.te-sidebar-footer { padding-top: 20px; border-top: 1px solid rgba(255,255,255,.06); }
+.te-btn-sidebar {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    background: #26c76e;
+    color: #fff;
+    border: none; cursor: pointer;
+    padding: 9px 14px;
+    border-radius: 10px;
+    font-size: 12.5px; font-weight: 600;
+    text-decoration: none;
+    width: 100%;
+    transition: background .15s;
+}
+.te-btn-sidebar:hover { background: #1fae5e; }
+
+/* Ayuda y soporte label (sidebar extra section) */
+.te-nav-section {
+    font-size: 10px; font-weight: 700; color: #4b5563;
+    text-transform: uppercase; letter-spacing: .08em;
+    padding: 14px 12px 6px;
+}
+
+/* =========================================================
+   MAIN CONTENT
+   ========================================================= */
+.te-main {
+    flex: 1;
+    padding: 28px 32px;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+.te-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 16px;
+}
+.te-page-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+}
+.te-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Buscador */
+.te-search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.te-search-input {
+    background: #1e2333;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px;
+    padding: 7px 14px 7px 34px;
+    color: #e2e4eb;
+    font-size: 13px;
+    width: 200px;
+    outline: none;
+    transition: border-color .15s;
+}
+.te-search-input::placeholder { color: #4b5563; }
+.te-search-input:focus { border-color: #26c76e; }
+.te-search-icon {
+    position: absolute; left: 11px;
+    color: #4b5563; font-size: 12px;
+    pointer-events: none;
+}
+
+/* Icon buttons */
+.te-icon-btn {
+    width: 34px; height: 34px;
+    background: #1e2333;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 9px;
+    color: #8b93a7;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+}
+.te-icon-btn:hover { color: #e2e4eb; border-color: rgba(255,255,255,.18); }
+
+.te-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,.12);
+}
+
+/* Primary button */
+.btn-primary {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: #26c76e;
+    color: #fff;
+    border: none; cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 13px; font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background .15s, transform .1s;
+}
+.te-btn-primary:hover { background: #1fae5e; }
+.te-btn-primary:active { transform: scale(.97); }
+
+/* =========================================================
+   FILTROS / PILLS
+   ========================================================= */
+.te-filters-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.te-filter-label {
+    font-size: 12px; color: #6b7280; font-weight: 500;
+    margin-right: 4px;
+}
+.te-pill {
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+    border: 1px solid rgba(255,255,255,.08);
+    color: #8b93a7;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all .15s;
+}
+.te-pill:hover { border-color: #26c76e; color: #26c76e; }
+.te-pill--active {
+    background: rgba(38,199,110,.15);
+    border-color: #26c76e;
+    color: #26c76e;
+}
+.ms-auto { margin-left: auto; }
+
+/* =========================================================
+   CARD (tabla)
+   ========================================================= */
+
+/* =========================================================
+   TABLA
+   ========================================================= */
+
+/* Fecha / hora */
+.te-fecha { font-size: 13px; color: #d1d5db; font-weight: 500; }
+.te-hora  { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+/* Precio */
+.te-precio { font-weight: 700; color: #e2e4eb; }
+
+/* Estado */
+.te-estado {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600;
+}
+.te-estado-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+.te-estado--activo  { color: #26c76e; }
+.te-estado--borrador{ color: #9ca3af; }
+.te-estado--agotado { color: #f87171; }
+.te-estado--cancelado{color: #6b7280; }
+
+/* Acciones */
+.te-actions { display: flex; align-items: center; justify-content: end; gap: 6px; }
+.te-action-btn {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.07);
+    color: #8b93a7;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+}
+.te-action-btn:hover { background: rgba(255,255,255,.1); color: #e2e4eb; }
+.te-action-btn--danger:hover { background: rgba(239,68,68,.15); color: #f87171; border-color: rgba(239,68,68,.2); }
+
+/* =========================================================
+   PAGINACIÓN
+   ========================================================= */
+
+
+/* =========================================================
+   MÉTRICAS
+   ========================================================= */
+
+/* =========================================================
+   FORMULARIO — Create / Edit
+   ========================================================= */
+#drop-zone{
+    height: 265px;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width: 900px) {
+    .te-sidebar { width: 60px; }
+    .te-brand-name, .te-brand-sub, .te-nav-item span, .te-btn-sidebar span { display: none; }
+    .te-brand-icon { margin: 0 auto; }
+    .te-sidebar-brand { justify-content: center; padding: 0 0 20px; }
+    .te-nav-item { justify-content: center; padding: 10px; }
+    .te-btn-sidebar { padding: 10px; justify-content: center; }
+    .te-metrics-grid { grid-template-columns: 1fr; }
+    .te-form-row { flex-direction: column; }
+    .te-form-group--fixed, .te-form-group--img { width: 100%; }
+    .te-form-group--img .te-img-upload { aspect-ratio: 16/9; }
+}

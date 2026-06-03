@@ -1,0 +1,269 @@
+@{
+    ViewData["Title"] = "Plantilla de Empleados";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- ===== ENCABEZADO ===== -->
+<section class="flex flex-col sm:flex-row sm:items-start justify-between gap-5 mb-8 animate-fade-in">
+    <div>
+        <h3 class="text-3xl font-extrabold text-on-surface tracking-tight mb-1">Plantilla de Empleados</h3>
+        <p class="text-sm text-on-surface-variant max-w-md">
+            Gestiona el equipo humano que hace posible cada función. Desde técnicos de iluminación hasta el personal de sala.
+        </p>
+    </div>
+    <a href="@Url.Action("Create","Staff")"
+       class="shrink-0 bg-primary text-white px-5 py-2.5 rounded-full font-semibold text-sm flex items-center gap-2
+              hover:bg-primary-dark active:scale-95 transition-all shadow-md self-start">
+        <i class="fa-solid fa-user-plus"></i> Añadir Empleado
+    </a>
+</section>
+
+<!-- ===== FILTROS ===== -->
+<section class="flex flex-wrap items-center gap-2 mb-8 animate-slide-up" style="animation-delay:.05s">
+    @{
+        var roles = new[] {
+            new { label="Todos (24)", value="todos" },
+            new { label="Taquilleros", value="TAQUILLA" },
+            new { label="Acomodadores", value="ACCESS" },
+            new { label="Técnicos", value="tecnicos" },
+            new { label="Administración", value="ADMIN" },
+        };
+    }
+    @foreach (var r in roles)
+    {
+        var active = r.value == "todos";
+        <button onclick="filtrarRol(this,'@r.value')"
+                class="filter-btn px-4 py-1.5 rounded-full text-xs font-semibold border transition-all
+                       @(active ? "bg-primary text-white border-primary shadow-sm" : "bg-white text-on-surface-variant border-black/10 hover:border-primary hover:text-primary")">
+            @r.label
+        </button>
+    }
+
+    <!-- Más filtros -->
+    <div class="ml-auto relative">
+        <button onclick="toggleFiltrosExtra()" id="btn-mas-filtros"
+                class="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold border border-black/10
+                       bg-white text-on-surface-variant hover:border-primary hover:text-primary transition-all">
+            <i class="fa-solid fa-sliders text-xs"></i> Más filtros
+        </button>
+        <!-- Dropdown extra -->
+        <div id="dropdown-filtros"
+             class="hidden absolute right-0 top-10 z-20 bg-white rounded-2xl border border-black/8 shadow-lg p-4 w-48 space-y-2">
+            <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-3">Estado</p>
+            @foreach (var est in new[]{"Activos","Inactivos","Todos"})
+            {
+                <label class="flex items-center gap-2 cursor-pointer group">
+                    <input type="radio" name="filtro-estado" value="@est.ToLower()"
+                           class="accent-primary" @(est=="Todos"?"checked":"") />
+                    <span class="text-sm text-on-surface group-hover:text-primary transition-colors">@est</span>
+                </label>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- ===== GRID DE EMPLEADOS ===== -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 animate-slide-up" style="animation-delay:.1s" id="staff-grid">
+    @{
+        // Paleta de colores para avatares por iniciales
+        var avatarColors = new[] {
+            ("bg-emerald-100","text-emerald-700"),
+            ("bg-blue-100","text-blue-700"),
+            ("bg-violet-100","text-violet-700"),
+            ("bg-amber-100","text-amber-700"),
+            ("bg-rose-100","text-rose-700"),
+            ("bg-cyan-100","text-cyan-700"),
+        };
+
+        var empleados = new[] {
+            new { nombre="Mateo García",   cargo="Taquillero Principal",  rol="TAQUILLA", activo=true  },
+            new { nombre="Lucía Sanz",     cargo="Jefa de Acomodadores",  rol="ACCESS",   activo=true  },
+            new { nombre="Hugo Torres",    cargo="Técnico de Sonido",     rol="tecnicos", activo=false },
+            new { nombre="Carla Méndez",   cargo="Técnico de Luces",      rol="tecnicos", activo=true  },
+            new { nombre="Ramón Vidal",    cargo="Personal de Sala",      rol="ACCESS",   activo=true  },
+            new { nombre="Elena Ruiz",     cargo="Administración",        rol="ADMIN",    activo=true  },
+        };
+
+        int colorIdx = 0;
+    }
+
+    @foreach (var emp in empleados)
+    {
+        var iniciales = string.Join("", emp.nombre.Split(' ').Take(2).Select(p => p[0]));
+        var (avBg, avText) = avatarColors[colorIdx % avatarColors.Length];
+        colorIdx++;
+
+        var estadoColor = emp.activo ? "text-emerald-600" : "text-gray-400";
+        var estadoDot   = emp.activo ? "bg-emerald-500"   : "bg-gray-400";
+        var estadoLabel = emp.activo ? "ACTIVO"           : "INACTIVO";
+
+        <div class="staff-card bg-white rounded-3xl border border-black/5 shadow-sm p-5
+                    hover:shadow-md hover:-translate-y-0.5 transition-all cursor-default"
+             data-rol="@emp.rol" data-activo="@emp.activo.ToString().ToLower()">
+
+            <!-- Estado badge -->
+            <div class="flex justify-end mb-3">
+                <span class="inline-flex items-center gap-1.5 text-[10px] font-bold @estadoColor">
+                    <span class="w-1.5 h-1.5 rounded-full @estadoDot"></span>
+                    @estadoLabel
+                </span>
+            </div>
+
+            <!-- Avatar con iniciales -->
+            <div class="flex flex-col items-center text-center mb-4">
+                <div class="w-20 h-20 @avBg @avText rounded-3xl flex items-center justify-center text-2xl font-black mb-3 shadow-sm select-none">
+                    @iniciales
+                </div>
+                <h4 class="font-bold text-on-surface text-base leading-tight">@emp.nombre</h4>
+                <p class="text-xs text-on-surface-variant mt-1">@emp.cargo</p>
+            </div>
+
+            <!-- Acciones -->
+            <div class="flex items-center gap-2 mt-1">
+                @if (emp.activo)
+                {
+                    <a href="@Url.Action("Edit","Staff", new { id = 1 })"
+                       class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-black/10
+                              text-xs font-semibold text-on-surface hover:border-primary hover:text-primary transition-all">
+                        <i class="fa-regular fa-pen-to-square text-xs"></i> Editar
+                    </a>
+                    <button title="Enviar correo"
+                            class="w-8 h-8 flex items-center justify-center rounded-xl border border-black/10
+                                   text-on-surface-variant hover:border-primary hover:text-primary transition-all">
+                        <i class="fa-regular fa-envelope text-xs"></i>
+                    </button>
+                    <button title="Desactivar" onclick="confirmarDesactivar(this)"
+                            class="w-8 h-8 flex items-center justify-center rounded-xl border border-black/10
+                                   text-on-surface-variant hover:border-red-300 hover:text-red-500 transition-all">
+                        <i class="fa-solid fa-ban text-xs"></i>
+                    </button>
+                }
+                else
+                {
+                    <button onclick="reactivarEmpleado(this)"
+                            class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-emerald-200
+                                   text-xs font-semibold text-emerald-600 hover:bg-emerald-50 transition-all">
+                        <i class="fa-solid fa-rotate-right text-xs"></i> Reactivar
+                    </button>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Tarjeta — Registrar Nuevo -->
+    <a href="@Url.Action("Create","Staff")"
+       class="bg-white rounded-3xl border-2 border-dashed border-black/10 p-5 flex flex-col items-center
+              justify-center text-center hover:border-primary/40 hover:bg-primary-light/10 transition-all
+              min-h-[220px] group">
+        <div class="w-12 h-12 rounded-2xl bg-black/5 group-hover:bg-primary/10 flex items-center justify-center mb-3 transition-all">
+            <i class="fa-solid fa-plus text-on-surface-variant group-hover:text-primary text-xl transition-colors"></i>
+        </div>
+        <p class="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">Registrar Nuevo Perfil</p>
+        <p class="text-xs text-on-surface-variant mt-1 max-w-[120px]">Agrega a un nuevo miembro al equipo del teatro.</p>
+    </a>
+
+</section>
+
+<!-- ===== MODAL DESACTIVAR ===== -->
+<div id="modal-desactivar" class="fixed inset-0 z-50 hidden items-center justify-center">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="cerrarModal()"></div>
+    <div class="relative bg-white rounded-3xl p-8 w-full max-w-sm mx-4 shadow-2xl animate-slide-up">
+        <div class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-ban text-amber-500 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-on-surface text-center mb-2">¿Desactivar empleado?</h3>
+        <p class="text-sm text-on-surface-variant text-center mb-6">El empleado perderá el acceso al sistema. Podrás reactivarlo en cualquier momento.</p>
+        <div class="flex gap-3">
+            <button onclick="cerrarModal()"
+                    class="flex-1 py-2.5 rounded-2xl border border-black/10 text-on-surface-variant text-sm font-semibold hover:bg-surface transition-all">
+                Cancelar
+            </button>
+            <button onclick="ejecutarDesactivar()"
+                    class="flex-1 py-2.5 rounded-2xl bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600 active:scale-95 transition-all">
+                Sí, desactivar
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+// ── Filtro por rol ──────────────────────────
+function filtrarRol(btn, rol) {
+    document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('bg-primary','text-white','border-primary','shadow-sm');
+        b.classList.add('bg-white','text-on-surface-variant','border-black/10');
+    });
+    btn.classList.add('bg-primary','text-white','border-primary','shadow-sm');
+    btn.classList.remove('bg-white','text-on-surface-variant','border-black/10');
+
+    document.querySelectorAll('.staff-card').forEach(card => {
+        const match = rol === 'todos' || card.dataset.rol === rol;
+        card.style.display = match ? '' : 'none';
+    });
+}
+
+// ── Dropdown filtros extra ──────────────────
+function toggleFiltrosExtra() {
+    const dd = document.getElementById('dropdown-filtros');
+    dd.classList.toggle('hidden');
+}
+document.addEventListener('click', e => {
+    if (!document.getElementById('btn-mas-filtros').contains(e.target))
+        document.getElementById('dropdown-filtros').classList.add('hidden');
+});
+
+// ── Modal desactivar ────────────────────────
+let cardTarget = null;
+function confirmarDesactivar(btn) {
+    cardTarget = btn.closest('.staff-card');
+    const m = document.getElementById('modal-desactivar');
+    m.classList.remove('hidden'); m.classList.add('flex');
+}
+function cerrarModal() {
+    document.getElementById('modal-desactivar').classList.add('hidden');
+    document.getElementById('modal-desactivar').classList.remove('flex');
+    cardTarget = null;
+}
+function ejecutarDesactivar() {
+    if (!cardTarget) return;
+    // Cambiar badge a INACTIVO
+    const badge = cardTarget.querySelector('span.inline-flex');
+    badge.className = 'inline-flex items-center gap-1.5 text-[10px] font-bold text-gray-400';
+    badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>INACTIVO';
+    // Reemplazar acciones por botón Reactivar
+    const actions = cardTarget.querySelector('.flex.items-center.gap-2');
+    actions.innerHTML = `
+        <button onclick="reactivarEmpleado(this)"
+                class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-emerald-200
+                       text-xs font-semibold text-emerald-600 hover:bg-emerald-50 transition-all">
+            <i class="fa-solid fa-rotate-right text-xs"></i> Reactivar
+        </button>`;
+    cardTarget.dataset.activo = 'false';
+    cerrarModal();
+}
+function reactivarEmpleado(btn) {
+    const card = btn.closest('.staff-card');
+    const badge = card.querySelector('span.inline-flex');
+    badge.className = 'inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600';
+    badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>ACTIVO';
+    card.dataset.activo = 'true';
+    const actions = card.querySelector('.flex.items-center.gap-2');
+    actions.innerHTML = `
+        <button class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-black/10
+                       text-xs font-semibold text-on-surface hover:border-primary hover:text-primary transition-all">
+            <i class="fa-regular fa-pen-to-square text-xs"></i> Editar
+        </button>
+        <button title="Enviar correo"
+                class="w-8 h-8 flex items-center justify-center rounded-xl border border-black/10
+                       text-on-surface-variant hover:border-primary hover:text-primary transition-all">
+            <i class="fa-regular fa-envelope text-xs"></i>
+        </button>
+        <button title="Desactivar" onclick="confirmarDesactivar(this)"
+                class="w-8 h-8 flex items-center justify-center rounded-xl border border-black/10
+                       text-on-surface-variant hover:border-red-300 hover:text-red-500 transition-all">
+            <i class="fa-solid fa-ban text-xs"></i>
+        </button>`;
+}
+</script>
+}

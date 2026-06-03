@@ -4,8 +4,23 @@
     ViewData["Title"] = "Dashboard - Métricas";
 }
 
-<div class="container mt-5">
-    <h1> Dashboard de Métricas</h1>
+<!-- ===== BIENVENIDA ===== -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 animate-fade-in">
+    <div>
+        <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Bienvenido de nuevo</p>
+        <h3 class="text-3xl font-extrabold text-on-surface tracking-tight mb-2">¡Hola, Eduardo! 👋</h3>
+        <p class="text-sm text-on-surface-variant max-w-xl">
+            Aquí tienes el estado general del teatro para hoy. Monitorea ventas de taquilla física, digital y el aforo
+            en tiempo real.
+        </p>
+    </div>
+    <a href="@Url.Action("Create", "Events")"
+       class="bg-primary text-white px-6 py-3 rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-primary-dark active:scale-95 transition-all shadow-md whitespace-nowrap text-sm">
+        <i class="fa-solid fa-calendar-plus"></i> Programar Función
+    </a>
+</section>
+
+<section class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-10">
 
     @if (!Model.Success)
     {
@@ -14,86 +29,90 @@
         </div>
     }
 
-    <!-- Date Range Filter -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" action="/dashboard/custom" class="row g-3">
-                <div class="col-md-4">
-                    <label for="desde" class="form-label">Desde</label>
-                    <input type="date" class="form-control" id="desde" name="desde" value="@Model.Desde.ToString("yyyy-MM-dd")">
+    <form id="" method="get" action="/dashboard/custom" class="">
+        <!-- Date Range Filter -->
+        <div class="grid grid-cols-1 gap-6">
+            <div class="bg-white rounded-3xl border border-black/5 shadow-sm p-6 animate-slide-up"
+                 style="animation-delay:.1s">
+                <div class="flex items-center gap-3 mb-5">
+                    <div
+                        class="w-9 h-9 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-sm">
+                        <i class="fa-regular fa-calendar"></i>
+                    </div>
+                    <h4 class="font-bold text-on-surface">Fecha y Hora</h4>
                 </div>
-                <div class="col-md-4">
-                    <label for="hasta" class="form-label">Hasta</label>
-                    <input type="date" class="form-control" id="hasta" name="hasta" value="@Model.Hasta.ToString("yyyy-MM-dd")">
+                <div class="grid grid-cols-2 gap-4 mb-5">
+                    <div>
+                        <label class="form-label" for="desde">Desde<span class="text-red-400">*</span></label>
+                        <input type="date" class="form-input" id="desde" name="desde"
+                               value="@Model.Desde.ToString("yyyy-MM-dd")" required/>
+                    </div>
+                    <div>
+                        <label for="hasta" class="form-label">Hasta<span class="text-red-400">*</span></label>
+                        <input type="date" class="form-input" id="hasta" name="hasta"
+                               value="@Model.Hasta.ToString("yyyy-MM-dd")">
+                    </div>
                 </div>
-                <div class="col-md-4 d-flex align-items-end">
+                <div class="flex items-center justify-end gap-3 mb-5">
                     <button type="submit" class="btn btn-primary w-100">Filtrar</button>
                 </div>
-            </form>
+            </div>
+        </div>
+    </form>
+
+    <div
+        class="bg-white rounded-3xl p-6 border border-black/5 shadow-sm flex flex-col justify-between hover:shadow-md transition-all animate-slide-up"
+        style="animation-delay:.05s">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Ventas por Semana</span>
+            <div class="w-10 h-10 bg-emerald-50 text-primary rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-wallet text-lg"></i>
+            </div>
+        </div>
+        <div>
+            <h4 class="text-3xl font-black text-on-surface mb-1">$42,850.00</h4>
+            <p class="text-xs text-emerald-600 font-semibold flex items-center gap-1">
+                <i class="fa-solid fa-arrow-trend-up"></i> +12.4% vs mes anterior
+            </p>
+        </div>
+        <!-- Mini bar chart decorativo -->
+        <div class="flex items-end gap-1 mt-4 h-8">
+            @foreach (var h in new[] { 40, 55, 35, 70, 60, 80, 65, 90, 75, 85, 95, 88 })
+            {
+                <div class="flex-1 bg-primary-light rounded-sm" style="height:@(h)%"></div>
+            }
         </div>
     </div>
-
-    <!-- Summary Cards -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card text-white bg-success">
-                <div class="card-body">
-                    <h5 class="card-title">Ingresos Totales</h5>
-                    <h2>@Model.TotalRevenue.ToString("C0")</h2>
-                    <small>COP</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card text-white bg-info">
-                <div class="card-body">
-                    <h5 class="card-title">Boletas Vendidas</h5>
-                    <h2>@Model.TotalTickets</h2>
-                    <small>unidades</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card text-white bg-primary">
-                <div class="card-body">
-                    <h5 class="card-title">Promedio por Boleta</h5>
-                    <h2>@Model.AveragePerTicket</h2>
-                    <small>precio</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Weekly Sales Table -->
-    <div class="card">
+    <div
+        class="bg-white rounded-3xl p-6 border border-black/5 shadow-sm flex flex-col justify-between hover:shadow-md transition-all animate-slide-up"
+        style="animation-delay:.05s">
         <div class="card-header bg-dark text-white">
-            <h5>Ventas por Semana</h5>
+            <h5>Ventas por </h5>
         </div>
         <div class="card-body">
             @if (Model.WeeklySales != null && Model.WeeklySales.Count > 0)
             {
                 <table class="table table-striped">
                     <thead class="table-dark">
-                        <tr>
-                            <th>Semana</th>
-                            <th>Ingresos</th>
-                            <th>Boletas</th>
-                            <th>Promedio</th>
-                        </tr>
+                    <tr>
+                        <th>Semana</th>
+                        <th>Ingresos</th>
+                        <th>Boletas</th>
+                        <th>Promedio</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach (var week in Model.WeeklySales)
-                        {
-                            var average = week.Cantidad > 0 ? (week.Total / week.Cantidad).ToString("C0") : "N/A";
-                            <tr>
-                                <td>@(week.Anio > 0 ? $"{week.Anio} - Semana {week.Semana}" : $"Semana {week.Semana}")</td>
-                                <td>@week.Total.ToString("C0")</td>
-                                <td>@week.Cantidad</td>
-                                <td>@average</td>
-                            </tr>
-                        }
+                    @foreach (var week in Model.WeeklySales)
+                    {
+                        var average = week.Cantidad > 0 ? (week.Total / week.Cantidad).ToString("C0") : "N/A";
+                        <tr>
+                            <td>@(week.Anio > 0 ? $"{week.Anio} - Semana {week.Semana}" : $"Semana {week.Semana}")</td>
+                            <td>@week.Total.ToString("C0")</td>
+                            <td>@week.Cantidad</td>
+                            <td>@average</td>
+                        </tr>
+                    }
                     </tbody>
                 </table>
             }
@@ -103,23 +122,115 @@
             }
         </div>
     </div>
-</div>
+</section>
+<!-- ===== KPI CARDS ===== -->
+<section class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
 
-<style>
-    .card {
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
+    <!-- Ventas del mes -->
+    <div
+        class="bg-white rounded-3xl p-6 border border-black/5 shadow-sm flex flex-col justify-between hover:shadow-md transition-all animate-slide-up"
+        style="animation-delay:.05s">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Ingresos Totales</span>
+            <div class="w-10 h-10 bg-emerald-50 text-primary rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-wallet text-lg"></i>
+            </div>
+        </div>
+        <div>
+            <h4 class="text-3xl font-black text-on-surface mb-1">
+                $ @Model.TotalRevenue.ToString("N0", new System.Globalization.CultureInfo("es-CO"))</h4>
+            <small>COP</small>
+        </div>
+    </div>
 
-    .card-title {
-        font-size: 0.95rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
+    <!-- Eventos activos -->
+    <div
+        class="bg-white rounded-3xl p-6 border border-black/5 shadow-sm flex flex-col justify-between hover:shadow-md transition-all animate-slide-up"
+        style="animation-delay:.1s">
+        <div class="flex justify-between items-center mb-4">
+            <span
+                class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Boletas Vendidas</span>
+            <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-masks-theater text-lg"></i>
+            </div>
+        </div>
+        <div>
+            <h4 class="text-3xl font-black text-on-surface mb-1">@Model.TotalTickets Eventos</h4>
+            <small>unidades</small>
+        </div>
+    </div>
 
-    .card h2 {
-        font-size: 2rem;
-        font-weight: 700;
-        margin: 0.5rem 0;
-    }
-</style>
+    <!-- Aforo hoy -->
+    <div
+        class="bg-white rounded-3xl p-6 border border-black/5 shadow-sm flex flex-col justify-between hover:shadow-md transition-all animate-slide-up"
+        style="animation-delay:.15s">
+        <div class="flex justify-between items-center mb-4">
+            <span
+                class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Promedio por Boleta</span>
+            <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-user-check text-lg"></i>
+            </div>
+        </div>
+        <div>
+            <h4 class="text-3xl font-black text-on-surface mb-1">$ @Model.AveragePerTicket</h4>
+            <small>COP</small>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <style>
+        .form-label { @("display:block; font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#6b6b63; margin-bottom:.4rem;") }
+
+        .form-input { @("width:100%; padding:.7rem 1rem; background:#f6f3ee; border-radius:1rem; border:1px solid rgba(0,0,0,.08); font-size:.875rem; color:#1c1c19; transition:all .2s;") }
+
+        .form-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(50, 105, 78, .15);
+            border-color: rgba(50, 105, 78, .35);
+        }
+
+        .toolbar-btn { @("width:1.75rem; height:1.75rem; display:flex; align-items:center; justify-content:center; border-radius:.5rem; font-size:.8rem; color:#6b6b63; transition:all .15s; cursor:pointer;") }
+
+        .toolbar-btn:hover {
+            background: #e8e4dd;
+            color: #1c1c19;
+        }
+
+        /* Placeholder del editor */
+        #editor:empty:before {
+            content: attr(data-ph);
+            color: #6b6b6366;
+            pointer-events: none;
+        }
+
+        /* Checkbox peer trick sin Tailwind peer-checked en radio */
+        input[type=radio]:checked ~ div {
+            border-color: #32694e !important;
+            background: rgba(202, 230, 214, .2) !important;
+        }
+
+        input[type=radio]:checked ~ div .opacity-0 {
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
+
+        /* Estilos de Veronica */
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+    </style>
+}

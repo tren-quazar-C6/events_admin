@@ -22,7 +22,7 @@ public class MetricsApiClient
     private string GetApiBaseUrl()
     {
         return _config["ApiSettings:BaseUrl"]
-            ?? "http://localhost:5114";
+            ?? "https://service.quasar.andrescortes.dev";
     }
 
     /// <summary>
@@ -212,7 +212,7 @@ public class MetricsApiClient
                 Hasta = hasta.Date,
                 TotalRevenue = totalRevenue,
                 TotalTickets = totalTickets,
-                AveragePerTicket = totalTickets == 0 ? "N/A" : (totalRevenue / totalTickets).ToString("C0"),
+                AveragePerTicket = totalTickets == 0 ? "N/A" : (totalRevenue / totalTickets).ToString("N0", new System.Globalization.CultureInfo("es-CO")),
                 WeeklySales = weeklySales
             };
         }

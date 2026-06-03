@@ -1,0 +1,266 @@
+@model IEnumerable<AdminEventoResumenDto>
+@{
+    ViewData["Title"] = "Gestión de Eventos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- ===== FILTROS + ACCIÓN ===== -->
+<section class="flex flex-col sm:flex-row sm:items-center justify-end gap-4 mb-8 animate-fade-in">
+    <a href="@Url.Action("Create", "Events")"
+       class="bg-primary text-white px-5 py-2.5 rounded-full font-semibold text-sm flex items-center gap-2 hover:bg-primary-dark active:scale-95 transition-all shadow-md whitespace-nowrap self-start sm:self-auto">
+        <i class="fa-solid fa-plus"></i> Nuevo Evento
+    </a>
+</section>
+
+<!-- ===== TABLA DE EVENTOS ===== -->
+<section class="bg-white rounded-3xl border border-black/5 shadow-sm overflow-hidden mb-8 animate-slide-up"
+         style="animation-delay:.05s">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+            <tr class="border-b border-black/5 bg-surface/60 text-xs text-on-surface-variant uppercase tracking-wider">
+                <th class="px-6 py-4 font-semibold">Evento</th>
+                <th class="px-6 py-4 font-semibold">Tipo</th>
+                <th class="px-6 py-4 font-semibold">Fecha / Hora</th>
+                <th class="px-6 py-4 font-semibold">Capacidad</th>
+                <th class="px-6 py-4 font-semibold">Estado</th>
+                <th class="px-6 py-4 font-semibold">Acciones</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-black/5 text-sm" id="eventos-body">
+            @foreach (var e in Model)
+            {
+                var estadoClase = e.status switch
+                {
+                    "PUBLISHED" => "bg-emerald-100 text-emerald-700",
+                    "DRAFT" => "bg-gray-100 text-gray-600",
+                    "CANCELLED" => "bg-red-100 text-red-600",
+                    _ => "bg-gray-100 text-gray-600"
+                };
+
+                <tr class="hover:bg-surface/40 transition-colors">
+
+                    <!-- Evento -->
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-4">
+
+                            <img src="@(string.IsNullOrEmpty(e.ruta_url)
+                                          ? "/images/no-image.png"
+                                          : e.ruta_url)"
+                                 class="w-12 h-12 rounded-2xl object-cover"/>
+
+                            <div>
+                                <p class="font-semibold">
+                                    @e.nombre_evento
+                                </p>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- Categoría -->
+                    <td class="px-4 py-4">
+                        @e.tipo_evento
+                    </td>
+
+                    <!-- Fecha -->
+                    <td class="px-4 py-4">
+                        <p>
+                            @e.fecha_evento.ToString("dd/MM/yyyy")
+                        </p>
+
+                        <p class="text-xs text-gray-500">
+                            @e.fecha_evento.ToString("HH:mm")
+                        </p>
+                    </td>
+
+                    <!-- Capacidad -->
+                    <td class="px-4 py-4">
+                        @e.capacidad_total
+                    </td>
+
+                    <!-- Estado -->
+                    <td class="px-4 py-4">
+                            <span class="@estadoClase px-3 py-1 rounded-full text-xs font-semibold">
+                                @e.status
+                            </span>
+                    </td>
+
+                    <!-- Acciones -->
+                    <td class="px-6 py-4 text-right">
+                        <a href="@Url.Action("Edit", "Events", new { id = e.id_evento })">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            Editar
+                        </a>
+                        <a href="@Url.Action("Detail", "Events", new { id = e.id_evento })">
+                            <i class="fa-solid fa-circle-info"></i>
+                            Detalles
+                        </a>
+                        <a href="@Url.Action("Detail", "Events", new { id = e.id_evento })">
+                            Zonas
+                        </a>
+                    </td>
+
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Footer tabla: contador + paginación -->
+    <div class="px-6 py-4 border-t border-black/5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p class="text-xs text-on-surface-variant" id="conteo-eventos">
+            Mostrando @Model.Count() de @ViewBag.TotalRecords eventos</p>
+        <div class="flex items-center gap-1">
+            @if (ViewBag.Page > 1)
+            {
+                <a asp-action="Index"
+                   asp-route-page="@(ViewBag.Page - 1)"
+                   class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-surface">
+                    <i class="fa-solid fa-chevron-left text-xs"></i>
+                </a>
+            }
+            @for (int p = 1; p <= ViewBag.TotalPages; p++)
+            {
+                <a asp-action="Index"
+                   asp-route-page="@p"
+                   class="w-8 h-8 flex items-center justify-center rounded-xl text-xs font-bold transition-all
+       @(p == ViewBag.Page
+                                     ? "bg-primary text-white shadow-sm"
+                                     : "hover:bg-surface text-on-surface-variant")">
+                    @p
+                </a>
+            }
+            @if (ViewBag.Page < ViewBag.TotalPages)
+            {
+                <a asp-action="Index"
+                   asp-route-page="@(ViewBag.Page + 1)"
+                   class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-surface">
+                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                </a>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- ===== MÉTRICAS RÁPIDAS ===== -->
+@* <section class="grid grid-cols-1 sm:grid-cols-3 gap-6 animate-slide-up" style="animation-delay:.15s"> *@
+@* *@
+@*     <!-- Ventas del Mes --> *@
+@*     <div class="bg-primary-light rounded-3xl p-6 flex flex-col gap-3 hover:shadow-md transition-all"> *@
+@*         <div class="flex items-center gap-2 text-primary-deep"> *@
+@*             <i class="fa-solid fa-arrow-trend-up text-base"></i> *@
+@*             <span class="text-xs font-bold uppercase tracking-wider">Ventas del Mes</span> *@
+@*         </div> *@
+@*         <h4 class="text-4xl font-black text-primary-deep">$12.4k</h4> *@
+@*         <p class="text-xs text-primary font-semibold">+15% vs mes anterior</p> *@
+@*     </div> *@
+@* *@
+@*     <!-- Asistencia Promedio --> *@
+@*     <div *@
+@*         class="bg-white rounded-3xl p-6 border border-black/5 shadow-sm flex flex-col gap-3 hover:shadow-md transition-all"> *@
+@*         <div class="flex items-center gap-2 text-on-surface-variant"> *@
+@*             <i class="fa-solid fa-ticket text-base"></i> *@
+@*             <span class="text-xs font-bold uppercase tracking-wider">Asistencia Promedio</span> *@
+@*         </div> *@
+@*         <h4 class="text-4xl font-black text-on-surface">88%</h4> *@
+@*         <p class="text-xs text-on-surface-variant">Ocupación salas principales</p> *@
+@*     </div> *@
+@* *@
+@*     <!-- Mejor Valorada --> *@
+@*     <div class="bg-amber-50 rounded-3xl p-6 border border-amber-100 flex flex-col gap-3 hover:shadow-md transition-all"> *@
+@*         <div class="flex items-center gap-2 text-amber-600"> *@
+@*             <i class="fa-solid fa-star text-base"></i> *@
+@*             <span class="text-xs font-bold uppercase tracking-wider">Mejor Valorada</span> *@
+@*         </div> *@
+@*         <p class="text-base font-black text-amber-700">Sinfonía de Otoño</p> *@
+@*         <p class="text-xs text-amber-600 font-semibold">4.9/5 basado en 340 reseñas</p> *@
+@*     </div> *@
+@* *@
+@* </section> *@
+
+<!-- ===== MODAL CONFIRMACIÓN ELIMINAR ===== -->
+<div id="modal-eliminar" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="cerrarModal()"></div>
+    <div class="relative bg-white rounded-3xl p-8 w-full max-w-sm mx-4 shadow-2xl animate-slide-up">
+        <div class="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-on-surface text-center mb-2">¿Eliminar evento?</h3>
+        <p class="text-sm text-on-surface-variant text-center mb-6">Esta acción no se puede deshacer. El evento y sus
+            boletas serán eliminados permanentemente.</p>
+        <div class="flex gap-3">
+            <button onclick="cerrarModal()"
+                    class="flex-1 py-2.5 rounded-2xl border border-black/10 text-on-surface-variant text-sm font-semibold hover:bg-surface transition-all">
+                Cancelar
+            </button>
+            <button onclick="ejecutarEliminar()"
+                    class="flex-1 py-2.5 rounded-2xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 active:scale-95 transition-all">
+                Sí, eliminar
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Filtro por categoría
+        function setFilter(btn, categoria) {
+            // Actualizar estilos botones
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('bg-primary', 'text-white', 'border-primary', 'shadow-sm');
+                b.classList.add('bg-white', 'text-on-surface-variant', 'border-black/10');
+            });
+            btn.classList.add('bg-primary', 'text-white', 'border-primary', 'shadow-sm');
+            btn.classList.remove('bg-white', 'text-on-surface-variant', 'border-black/10');
+
+            // Filtrar filas
+            const rows = document.querySelectorAll('.evento-row');
+            let visible = 0;
+            rows.forEach(row => {
+                const match = categoria === 'Todos' || row.dataset.categoria === categoria;
+                row.style.display = match ? '' : 'none';
+                if (match) visible++;
+            });
+            document.getElementById('conteo-eventos').textContent =
+                `Mostrando 1–${visible} de ${rows.length} eventos`;
+        }
+
+        // Modal eliminar
+        let filaAEliminar = null;
+
+        function confirmarEliminar(btn) {
+            filaAEliminar = btn.closest('tr');
+            document.getElementById('modal-eliminar').classList.remove('hidden');
+            document.getElementById('modal-eliminar').classList.add('flex');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modal-eliminar').classList.add('hidden');
+            document.getElementById('modal-eliminar').classList.remove('flex');
+            filaAEliminar = null;
+        }
+
+        function ejecutarEliminar() {
+            if (filaAEliminar) {
+                filaAEliminar.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                filaAEliminar.style.opacity = '0';
+                filaAEliminar.style.transform = 'translateX(20px)';
+                setTimeout(() => filaAEliminar.remove(), 300);
+            }
+            cerrarModal();
+        }
+
+        function duplicarEvento(btn) {
+            const fila = btn.closest('tr');
+            const clone = fila.cloneNode(true);
+            clone.style.opacity = '0';
+            clone.style.transform = 'translateY(-8px)';
+            fila.parentNode.insertBefore(clone, fila.nextSibling);
+            requestAnimationFrame(() => {
+                clone.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                clone.style.opacity = '1';
+                clone.style.transform = 'translateY(0)';
+            });
+        }
+    </script>
+}

@@ -1,53 +1,193 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - events_admin </title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/events_admin.styles.css" asp-append-version="true" />
+    <title>@ViewData["Title"] — Telón Admin</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/admin.css" />
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['DM Sans', 'sans-serif'],
+                        serif: ['DM Serif Display', 'serif'],
+                    },
+                    colors: {
+                        surface: '#f6f3ee',
+                        'on-surface': '#1c1c19',
+                        'on-surface-variant': '#6b6b63',
+                        primary: '#32694e',
+                        'primary-dark': '#254f3b',
+                        'primary-light': '#cae6d6',
+                        'primary-deep': '#08452e',
+                    },
+                    borderRadius: {
+                        '2xl': '1rem',
+                        '3xl': '1.5rem',
+                        '4xl': '2rem',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">events_admin - prueba archivo events_admin</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+<body class="bg-surface font-sans text-on-surface antialiased flex h-screen overflow-hidden">
+
+    <!-- ===== OVERLAY (móvil) ===== -->
+    <div id="sidebar-overlay"
+         class="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 hidden opacity-0 transition-opacity duration-300"
+         onclick="closeSidebar()"></div>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="sidebar"
+           class="fixed md:relative inset-y-0 left-0 w-64 shrink-0 bg-white border-r border-black/5 flex flex-col h-full z-40
+                  -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+
+        <!-- Logo + botón cerrar (solo móvil) -->
+        <div class="px-6 py-6 border-b border-black/5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center shadow-sm shrink-0">
+                    <i class="fa-solid fa-masks-theater text-white text-base"></i>
+                </div>
+                <div>
+                    <p class="font-extrabold text-on-surface text-sm leading-none">Telón Admin</p>
+                    <p class="text-[10px] text-on-surface-variant mt-0.5">Gestión de Teatro</p>
                 </div>
             </div>
+            <!-- X solo visible en móvil -->
+            <button onclick="closeSidebar()"
+                    class="md:hidden w-8 h-8 flex items-center justify-center rounded-xl hover:bg-surface text-on-surface-variant transition-colors">
+                <i class="fa-solid fa-xmark text-base"></i>
+            </button>
+        </div>
+
+        <!-- Nav -->
+        <nav class="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
+            @{
+                var ctrl = ViewContext.RouteData.Values["controller"]?.ToString();
+                var act  = ViewContext.RouteData.Values["action"]?.ToString();
+                Func<string,string,string> Nav = (c,a) =>
+                    (ctrl==c && act==a)
+                    ? "flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-primary text-white font-semibold text-sm shadow-sm"
+                    : "flex items-center gap-3 px-4 py-2.5 rounded-2xl text-on-surface-variant hover:bg-surface hover:text-on-surface font-medium text-sm transition-all";
+            }
+
+            <a href="@Url.Action("Index","Dashboard")" class="@Nav("Dashboard","Index")">
+                <i class="fa-solid fa-table-cells-large w-4 text-center"></i><span>Dashboard</span>
+            </a>
+            <a href="@Url.Action("Index", "Events")" class="@Nav("Eventos", "Index")">
+                <i class="fa-solid fa-calendar-day w-4 text-center"></i><span>Eventos</span>
+            </a>
+            <a href="@Url.Action("Index","Staff")" class="@Nav("Staff","Index")">
+                <i class="fa-solid fa-users w-4 text-center"></i><span>Empleados</span>
+            </a>
+            <a href="@Url.Action("Index","Pqrs")" class="@Nav("Pqrs","Index")">
+                <i class="fa-solid fa-comments w-4 text-center"></i><span>PQRS</span>
+                <span class="ml-auto bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">3</span>
+            </a>
+            <a href="@Url.Action("Index","Metricas")" class="@Nav("Metricas","Index")">
+                <i class="fa-solid fa-chart-line w-4 text-center"></i><span>Métricas</span>
+            </a>
+            <div class="pt-4 border-t border-black/5 mt-2">
+                <a href="@Url.Action("Index","Configuracion")" class="@Nav("Configuracion","Index")">
+                    <i class="fa-solid fa-gear w-4 text-center"></i><span>Configuración</span>
+                </a>
+            </div>
         </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+
+        <!-- CTA Nuevo Evento -->
+        @* <div class="px-4 pt-2 pb-3"> *@
+        @*     <a href="@Url.Action("Create","Eventos")" *@
+        @*        class="w-full bg-primary text-white py-3 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-primary-dark active:scale-95 transition-all shadow-sm"> *@
+        @*         <i class="fa-solid fa-plus"></i> Nuevo Evento *@
+        @*     </a> *@
+        @* </div> *@
+
+        <!-- ===== CERRAR SESIÓN ===== -->
+        <div class="px-4 pb-5 border-t border-black/5 pt-3">
+            <!-- Info del usuario -->
+            @* <div class="flex items-center gap-3 px-2 mb-3"> *@
+            @*     <img src="https://i.pravatar.cc/36?img=11" alt="Admin" *@
+            @*          class="w-9 h-9 rounded-xl object-cover shrink-0" /> *@
+            @*     <div class="min-w-0"> *@
+            @*         <p class="text-xs font-bold text-on-surface leading-none truncate">Eduardo V.</p> *@
+            @*         <p class="text-[10px] text-on-surface-variant mt-0.5 truncate">Gerente General</p> *@
+            @*     </div> *@
+            @* </div> *@
+            <!-- Botón logout -->
+            <form method="post" action="@Url.Action("Logout","Home")">
+                @Html.AntiForgeryToken()
+                <button type="submit"
+                        class="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-red-500 hover:bg-red-50 font-semibold text-sm transition-all group">
+                    <i class="fa-solid fa-right-from-bracket w-4 text-center group-hover:translate-x-0.5 transition-transform"></i>
+                    <span>Cerrar Sesión</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN ===== -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+
+        <!-- Header -->
+        <header class="bg-white border-b border-black/5 px-4 md:px-8 py-4 flex items-center justify-between shrink-0 gap-3">
+
+            <!-- Hamburger (siempre visible) + título -->
+            <div class="flex items-center gap-3 min-w-0">
+                <button id="sidebar-toggle" onclick="toggleSidebar()"
+                        class="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface text-on-surface-variant transition-colors shrink-0"
+                        title="Mostrar/ocultar menú">
+                    <i id="toggle-icon" class="fa-solid fa-bars text-base"></i>
+                </button>
+                <h2 class="font-serif text-lg md:text-xl text-on-surface tracking-tight truncate">@ViewData["Title"]</h2>
+            </div>
+
+            <!-- Right actions -->
+            <div class="flex items-center gap-2 md:gap-4 shrink-0">
+                <!-- Búsqueda — oculta en móvil -->
+                <div class="relative hidden lg:block">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-xs"></i>
+                    <input type="text" placeholder="Buscar eventos, ventas..."
+                           class="pl-9 pr-4 py-2 bg-surface rounded-xl text-sm border border-black/5 focus:outline-none w-56" />
+                </div>
+
+                <!-- Notificaciones -->
+                <button class="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface text-on-surface-variant transition-colors">
+                    <i class="fa-regular fa-bell text-base"></i>
+                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                </button>
+
+                <!-- Ayuda — oculta en móvil pequeño -->
+                <button class="hidden sm:flex w-9 h-9 items-center justify-center rounded-xl hover:bg-surface text-on-surface-variant transition-colors">
+                    <i class="fa-regular fa-circle-question text-base"></i>
+                </button>
+
+                <!-- Avatar + nombre -->
+                <div class="flex items-center gap-2.5 cursor-pointer group">
+                    <img src="https://i.pravatar.cc/36?img=11" alt="Admin"
+                         class="w-9 h-9 rounded-xl object-cover border-2 border-transparent group-hover:border-primary transition-all" />
+                    <div class="hidden md:block">
+                        <p class="text-xs font-bold text-on-surface leading-none">Eduardo V.</p>
+                        <p class="text-[10px] text-on-surface-variant mt-0.5">Gerente General</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - events_admin - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/admin.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

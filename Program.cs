@@ -19,12 +19,11 @@ if (string.IsNullOrWhiteSpace(connectionString))
 }
 
 var urls = configuration["ASPNETCORE_URLS"] ?? "http://localhost:5039";
-
-var host = new HostBuilder()
-    .ConfigureWebHost(webBuilder =>
+// === REEMPLAZA DESDE AQUÍ ===
+var host = Host.CreateDefaultBuilder(args) // <-- [CORREGIDO] Inicializa la consola, variables de entorno y el motor interno de .NET
+    .ConfigureWebHostDefaults(webBuilder => // <-- [CORREGIDO] Configura Kestrel y enrutamiento automáticamente con los estándares
     {
         webBuilder
-            .UseKestrel()
             .UseContentRoot(Directory.GetCurrentDirectory())
             .UseConfiguration(configuration)
             .UseUrls(urls)
@@ -37,10 +36,29 @@ var host = new HostBuilder()
                     )
                 );
 
+                // Registrar HttpClient para consumir tu API externa
+                services.AddHttpClient();
+
+                // Configurar el Middleware de Cookies nativo
+                services.AddAuthentication(options =>
+                    {
+                        options.DefaultAuthenticateScheme = "TeatrosCookieAuth";
+                        options.DefaultSignInScheme = "TeatrosCookieAuth";
+                        options.DefaultChallengeScheme = "TeatrosCookieAuth";
+                    })
+                    .AddCookie("TeatrosCookieAuth", options =>
+                    {
+                        options.LoginPath = "/Home/Login";
+                        options.AccessDeniedPath = "/Home/AccessDenied";
+                        options.Cookie.Name = "QuasarAdminSession"; // Nombre físico de la cookie en el navegador
+                        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+                    });
+
                 services.AddScoped<MetricsService>();
                 services.AddScoped<EventBusinessRulesService>();
                 services.AddScoped<EmployeePermissionsService>();
                 services.AddScoped<NotificationTriggerService>();
+                services.AddScoped<EventService>();
                 services.AddHttpClient<MetricsApiClient>();
                 services.AddControllersWithViews();
 
@@ -67,6 +85,7 @@ var host = new HostBuilder()
                 app.UseStaticFiles();
                 app.UseRouting();
                 app.UseCors("AllowFrontend");
+                app.UseAuthentication();
                 app.UseAuthorization();
 
                 app.UseEndpoints(endpoints =>

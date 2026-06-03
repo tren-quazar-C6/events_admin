@@ -110,7 +110,7 @@ public class DashboardController : Controller
                 Hasta = range.End.Date,
                 TotalRevenue = totalRevenue,
                 TotalTickets = totalTickets,
-                AveragePerTicket = totalTickets == 0 ? "N/A" : (totalRevenue / totalTickets).ToString("C0"),
+                AveragePerTicket = totalTickets == 0 ? "N/A" : (totalRevenue / totalTickets).ToString("N0", new System.Globalization.CultureInfo("es-CO")),
                 WeeklySales = weeklySales
             };
         }
