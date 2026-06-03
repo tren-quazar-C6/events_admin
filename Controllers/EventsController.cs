@@ -170,6 +170,22 @@ public class EventsController : Controller
         return View(evento);
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GenerateSeats(int id, CancellationToken ct = default)
+    {
+        var token = GetJwtToken();
+        if (string.IsNullOrEmpty(token))
+            return RedirectToAction("Login", "Home");
+
+        var (ok, error) = await _eventosApi.GenerateEventSeatsAsync(token, id, ct);
+        TempData[ok ? "Success" : "Error"] = ok
+            ? "Butacas generadas correctamente."
+            : error ?? "No se pudieron generar las butacas.";
+
+        return RedirectToAction(nameof(Detail), new { id });
+    }
+
     [HttpGet]
     public async Task<IActionResult> ConfigureZones(int id, CancellationToken ct = default)
     {

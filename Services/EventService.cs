@@ -139,6 +139,20 @@ public class EventService
         return (ok, error);
     }
 
+    public async Task<(bool ok, string? error)> GenerateEventSeatsAsync(
+        string jwtToken,
+        int id,
+        CancellationToken ct = default)
+    {
+        var client = CreateAuthorizedClient(jwtToken);
+        var response = await client.PostAsync(
+            $"{BaseUrl}/api/admin/eventos/{id}/asientos/generar", JsonBody(new { }), ct);
+
+        var json = await response.Content.ReadAsStringAsync(ct);
+        var (ok, error, _) = ParseWriteResponse(response.StatusCode, json, "Error al generar las butacas");
+        return (ok, error);
+    }
+
     private static (bool ok, string? error, int? id_evento) ParseWriteResponse(
         System.Net.HttpStatusCode statusCode,
         string json,
@@ -411,6 +425,7 @@ public class EventService
             GetStringAny(data, "motivo_cancelacion", "motivoCancelacion", "MotivoCancelacion"),
             GetStringAny(data, "ruta_url", "rutaUrl", "RutaUrl"),
             zonas,
+            GetInt32Any(data, "asientos_generados", "asientosGenerados", "AsientosGenerados"),
             GetInt32Any(data, "asientos_disponibles", "disponibles", "asientosDisponibles", "AsientosDisponibles"),
             GetInt32Any(data, "asientos_reservados", "reservados", "asientosReservados", "AsientosReservados"),
             GetInt32Any(data, "asientos_vendidos", "vendidos", "asientosVendidos", "AsientosVendidos"));
