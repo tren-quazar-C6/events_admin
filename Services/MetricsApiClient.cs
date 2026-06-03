@@ -22,7 +22,7 @@ public class MetricsApiClient
     private string GetApiBaseUrl()
     {
         return _config["ApiSettings:BaseUrl"]
-            ?? "http://localhost:5114";
+            ?? "https://service.quasar.andrescortes.dev";
     }
 
     /// <summary>

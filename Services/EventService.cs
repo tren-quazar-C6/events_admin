@@ -13,7 +13,7 @@ public class EventService
     private readonly IHttpClientFactory _clientFactory;
     private readonly IConfiguration _config;
 
-    private string BaseUrl => _config?["ApiSettings:BaseUrl"] ?? "http://localhost:5114";
+    private string BaseUrl => _config?["ApiSettings:BaseUrl"] ?? "https://service.quasar.andrescortes.dev";
 
     public EventService(IHttpClientFactory clientFactory, IConfiguration config)
     {
